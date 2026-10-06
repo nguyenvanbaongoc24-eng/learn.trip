@@ -27,9 +27,10 @@ interface NavbarProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   onOpenAuth?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export function Navbar({ activeTab, setActiveTab, onOpenAuth }: NavbarProps) {
+export function Navbar({ activeTab, setActiveTab, onOpenAuth, onOpenSettings }: NavbarProps) {
   const { progress, locale, setLocale } = useGame();
   const { user, isAuthenticated, isStaff, logout } = useAuth();
   const [soundOn, setSoundOn] = useState(true);
@@ -175,7 +176,7 @@ export function Navbar({ activeTab, setActiveTab, onOpenAuth }: NavbarProps) {
                 <span className="hidden sm:inline font-bold text-xs text-slate-800 max-w-[100px] truncate">
                   {user.displayName}
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
               </button>
 
               {/* User Dropdown Menu */}
@@ -187,8 +188,15 @@ export function Navbar({ activeTab, setActiveTab, onOpenAuth }: NavbarProps) {
                       {user.displayName}
                     </div>
                     <div className="text-[11px] text-slate-500 truncate">{user.email}</div>
-                    <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">
-                      Vai trò: {user.role}
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">
+                        Vai trò: {user.role}
+                      </span>
+                      {user.cefrLevel && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700 border border-sky-200">
+                          CEFR {user.cefrLevel}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -216,6 +224,19 @@ export function Navbar({ activeTab, setActiveTab, onOpenAuth }: NavbarProps) {
                     >
                       <BookOpen className="w-4 h-4 text-slate-400" />
                       <span>Hộ chiếu & Huy hiệu</span>
+                    </button>
+
+                    {/* Settings button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        onOpenSettings?.();
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 font-bold cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4 text-slate-400" />
+                      <span>Cài đặt</span>
                     </button>
                   </div>
 
