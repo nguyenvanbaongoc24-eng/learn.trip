@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import { useAuthSafe } from "@/context/AuthContext";
 import {
   Location,
   Quest,
@@ -25,11 +26,16 @@ interface CelebrationState {
   xpEarned: number;
 }
 
+export type CloudSyncStatus = "synced" | "syncing" | "offline" | "guest";
+
 interface GameContextType {
   locale: "vi" | "en";
   setLocale: (l: "vi" | "en") => void;
   t: (loc: LocalizedText) => string;
   progress: UserProgress;
+  syncStatus: CloudSyncStatus;
+  lastSyncedAt: string | null;
+  syncCloudProgress: () => Promise<void>;
   locations: Location[]; // Player-facing: strictly published
   allLocations: Location[]; // CMS-facing: all items including draft / in_review
   currentLocation: Location;
@@ -129,12 +135,49 @@ function uniqueLocations(locations: Location[]): Location[] {
 }
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
+  const auth = useAuthSafe();
   const [locale, setLocale] = useState<"vi" | "en">("vi");
   const [progress, setProgress] = useState<UserProgress>(defaultProgress);
   const [allLocations, setAllLocations] = useState<Location[]>(() => uniqueLocations(mockLocations));
   const [versions, setVersions] = useState<ContentVersion[]>(initialVersions);
   const [isLoaded, setIsLoaded] = useState(false);
   const [celebration, setCelebration] = useState<CelebrationState | null>(null);
+
+  // Cloud sync state
+  const [syncStatus, setSyncStatus] = useState<CloudSyncStatus>("guest");
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
+
+  // Manual or programmatic cloud sync
+  const syncCloudProgress = useCallback(async () => {
+    if (!auth?.isAuthenticated || !auth?.user) {
+      setSyncStatus("guest");
+      return;
+    }
+    setSyncStatus("syncing");
+    try {
+      const res = await fetch("/api/progress/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ progress: progressRef.current }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.progress) {
+          setProgress(data.progress);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.progress));
+          setLastSyncedAt(data.syncedAt || new Date().toISOString());
+          setSyncStatus("synced");
+        }
+      } else {
+        setSyncStatus("offline");
+      }
+    } catch {
+      setSyncStatus("offline");
+    }
+  }, [auth?.isAuthenticated, auth?.user]);
 
   // Load progress and CMS content from localStorage on mount
   useEffect(() => {
@@ -187,6 +230,56 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [progress, allLocations, versions, isLoaded]);
+
+  // Initial cloud sync when authenticated user is detected or switches
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (auth?.isAuthenticated && auth?.user) {
+      setSyncStatus("syncing");
+      fetch("/api/progress/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ progress: progressRef.current }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.progress) {
+            setProgress(data.progress);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.progress));
+            setLastSyncedAt(data.syncedAt || new Date().toISOString());
+            setSyncStatus("synced");
+          } else {
+            setSyncStatus("offline");
+          }
+        })
+        .catch(() => setSyncStatus("offline"));
+    } else {
+      setSyncStatus("guest");
+    }
+  }, [auth?.isAuthenticated, auth?.user?.id, isLoaded]);
+
+  // Auto-sync debounced (1.5s) when progress changes for authenticated user
+  useEffect(() => {
+    if (!isLoaded || !auth?.isAuthenticated || !auth?.user) return;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/progress/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ progress: progressRef.current }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setLastSyncedAt(data.syncedAt || new Date().toISOString());
+          setSyncStatus("synced");
+        }
+      } catch {
+        // Offline / network pause
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [progress, auth?.isAuthenticated, auth?.user?.id, isLoaded]);
 
   const t = (loc: LocalizedText): string => {
     return loc[locale] || loc.en || loc.vi || "";
@@ -429,8 +522,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return undefined;
   };
 
-  const resetProgress = () => {
-    setProgress({
+  const resetProgress = async () => {
+    const fresh: UserProgress = {
       xp: 0,
       streak: 1,
       lastActiveDate: new Date().toISOString(),
@@ -441,8 +534,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       collectedStamps: [],
       collectedBadges: [],
       checkedInPoiIds: [],
-    });
+    };
+    setProgress(fresh);
     localStorage.removeItem(STORAGE_KEY);
+
+    if (auth?.isAuthenticated) {
+      try {
+        await fetch("/api/progress", { method: "DELETE" });
+        setSyncStatus("synced");
+      } catch {
+        // ignore
+      }
+    }
   };
 
   // ----------------------------------------------------------------
@@ -738,6 +841,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setLocale,
         t,
         progress,
+        syncStatus,
+        lastSyncedAt,
+        syncCloudProgress,
         locations: publishedLocations, // strictly published to players
         allLocations, // all items for CMS
         currentLocation,

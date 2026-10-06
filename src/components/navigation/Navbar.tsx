@@ -18,6 +18,8 @@ import {
   Shield,
   ChevronDown,
   Settings,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 import { sounds } from "@/utils/soundEffects";
 
@@ -31,7 +33,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ activeTab, setActiveTab, onOpenAuth, onOpenSettings }: NavbarProps) {
-  const { progress, locale, setLocale } = useGame();
+  const { progress, locale, setLocale, syncStatus } = useGame();
   const { user, isAuthenticated, isStaff, logout } = useAuth();
   const [soundOn, setSoundOn] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -132,6 +134,43 @@ export function Navbar({ activeTab, setActiveTab, onOpenAuth, onOpenSettings }: 
           >
             <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
             <span>{progress.xp} XP</span>
+          </div>
+
+          {/* Cloud Sync Status Indicator */}
+          <div
+            className="hidden md:flex items-center gap-1 px-2 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-[11px] font-bold shadow-2xs cursor-default"
+            title={
+              isAuthenticated
+                ? syncStatus === "synced"
+                  ? "Tiến độ đã được sao lưu an toàn trên đám mây"
+                  : syncStatus === "syncing"
+                  ? "Đang đồng bộ với máy chủ..."
+                  : "Mất kết nối máy chủ - lưu tạm trên máy"
+                : "Chế độ Khách - Lưu tạm trên trình duyệt"
+            }
+          >
+            {isAuthenticated ? (
+              syncStatus === "synced" ? (
+                <span className="flex items-center gap-1 text-emerald-600">
+                  <Cloud className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline text-[10px]">Cloud</span>
+                </span>
+              ) : syncStatus === "syncing" ? (
+                <span className="flex items-center gap-1 text-amber-600 animate-pulse">
+                  <Cloud className="w-3.5 h-3.5 animate-spin" />
+                  <span className="hidden lg:inline text-[10px]">Sync...</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-slate-400">
+                  <CloudOff className="w-3.5 h-3.5" />
+                </span>
+              )
+            ) : (
+              <span className="flex items-center gap-1 text-slate-400" title="Chế độ Khách (Lưu trên máy)">
+                <CloudOff className="w-3.5 h-3.5" />
+                <span className="hidden lg:inline text-[10px]">Guest</span>
+              </span>
+            )}
           </div>
 
           {/* Sound FX Toggle */}

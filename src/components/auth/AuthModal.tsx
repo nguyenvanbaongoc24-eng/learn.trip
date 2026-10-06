@@ -81,10 +81,17 @@ export function AuthModal({ isOpen, onClose, initialTab = "login" }: AuthModalPr
       return;
     }
 
-    // Merge guest progress if any
+    // Merge and sync guest progress to cloud if any
     if (isGuestWithData) {
-      const merged = mergeUserProgress(progress, progress);
-      localStorage.setItem("learntrip_user_progress_v1", JSON.stringify(merged));
+      try {
+        await fetch("/api/progress/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ progress }),
+        });
+      } catch {
+        // Fallback to local
+      }
     }
 
     setSuccessMessage("Đăng nhập thành công! Đang tải dữ liệu...");
@@ -131,10 +138,17 @@ export function AuthModal({ isOpen, onClose, initialTab = "login" }: AuthModalPr
         return;
       }
 
-      // Merge guest progress into user storage
+      // Merge and sync guest progress into cloud storage
       if (isGuestWithData) {
-        const merged = mergeUserProgress(progress, progress);
-        localStorage.setItem("learntrip_user_progress_v1", JSON.stringify(merged));
+        try {
+          await fetch("/api/progress/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ progress }),
+          });
+        } catch {
+          // Fallback to local
+        }
       }
 
       setSuccessMessage("Đăng ký tài khoản thành công! Chào mừng bạn đến với Learn.Trip.");
@@ -166,8 +180,15 @@ export function AuthModal({ isOpen, onClose, initialTab = "login" }: AuthModalPr
       }
 
       if (isGuestWithData) {
-        const merged = mergeUserProgress(progress, progress);
-        localStorage.setItem("learntrip_user_progress_v1", JSON.stringify(merged));
+        try {
+          await fetch("/api/progress/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ progress }),
+          });
+        } catch {
+          // Fallback to local
+        }
       }
 
       setSuccessMessage("Đăng nhập với Google thành công!");
