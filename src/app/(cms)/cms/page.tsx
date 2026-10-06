@@ -5,20 +5,20 @@ import { useRouter } from "next/navigation";
 import { GameProvider } from "@/context/GameContext";
 import { CmsDashboard } from "@/components/admin/CmsDashboard";
 
-function AdminPageInner() {
+function CmsDashboardWrapper() {
   const router = useRouter();
 
-  const handleBack = () => {
+  const handleBackToGame = () => {
     router.push("/");
   };
 
-  return <CmsDashboard onBackToGame={handleBack} />;
+  return <CmsDashboard onBackToGame={handleBackToGame} />;
 }
 
-export default function AdminPage() {
+export default function CmsPage() {
   return (
     <GameProvider>
-      <AdminPageInner />
+      <CmsDashboardWrapper />
     </GameProvider>
   );
 }

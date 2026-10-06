@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { GameProvider, useGame } from "@/context/GameContext";
+import { useGame } from "@/context/GameContext";
 import { Navbar, MobileTabBar, TabType } from "@/components/navigation/Navbar";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { MapScreen } from "@/components/screens/MapScreen";
@@ -11,7 +11,6 @@ import { ProfileScreen } from "@/components/screens/ProfileScreen";
 import { LocationPreviewModal } from "@/components/screens/LocationPreviewModal";
 import { QuestModal } from "@/components/game/QuestModal";
 import { CelebrationModal } from "@/components/game/CelebrationModal";
-import { CmsDashboard } from "@/components/admin/CmsDashboard";
 import { Location, Quest } from "@/types/content";
 
 // Dynamic import for 3D component (no SSR - Three.js needs browser)
@@ -20,12 +19,11 @@ const Explore3DModal = dynamic(
   { ssr: false }
 );
 
-function MainApp() {
+export default function LearnerHomePage() {
   const { currentLocation, getNextLocation, progress, checkInPoi } = useGame();
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [previewLocation, setPreviewLocation] = useState<Location | null>(null);
   const [activeQuest, setActiveQuest] = useState<Quest | null>(null);
-  const [cmsMode, setCmsMode] = useState<boolean>(false);
   const [show3D, setShow3D] = useState<boolean>(false);
   const [selected3DLocation, setSelected3DLocation] = useState<string>("loc-hanoi");
 
@@ -59,10 +57,6 @@ function MainApp() {
     setShow3D(true);
   }, [currentLocation]);
 
-  if (cmsMode) {
-    return <CmsDashboard onBackToGame={() => setCmsMode(false)} />;
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 relative">
       {/* Scenic Vietnam Landmark Ambient Backdrop */}
@@ -79,11 +73,14 @@ function MainApp() {
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenCms={() => setCmsMode(true)}
+        onOpenAuth={() => {
+          // Will be connected to AuthModal in Phase 2
+          setActiveTab("profile");
+        }}
       />
 
       {/* Main Screen Content */}
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 pb-16 md:pb-6">
         {activeTab === "home" && (
           <HomeScreen
             onNavigateTab={setActiveTab}
@@ -135,13 +132,5 @@ function MainApp() {
         onCheckIn={checkInPoi}
       />
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <GameProvider>
-      <MainApp />
-    </GameProvider>
   );
 }
