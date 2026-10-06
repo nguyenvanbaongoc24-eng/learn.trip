@@ -11,6 +11,7 @@ import { ProfileScreen } from "@/components/screens/ProfileScreen";
 import { LocationPreviewModal } from "@/components/screens/LocationPreviewModal";
 import { QuestModal } from "@/components/game/QuestModal";
 import { CelebrationModal } from "@/components/game/CelebrationModal";
+import { AuthModal } from "@/components/auth/AuthModal";
 import { Location, Quest } from "@/types/content";
 
 // Dynamic import for 3D component (no SSR - Three.js needs browser)
@@ -26,6 +27,8 @@ export default function LearnerHomePage() {
   const [activeQuest, setActiveQuest] = useState<Quest | null>(null);
   const [show3D, setShow3D] = useState<boolean>(false);
   const [selected3DLocation, setSelected3DLocation] = useState<string>("loc-hanoi");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
 
   const handleOpenLocation = (location: Location) => {
     setPreviewLocation(location);
@@ -74,8 +77,8 @@ export default function LearnerHomePage() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenAuth={() => {
-          // Will be connected to AuthModal in Phase 2
-          setActiveTab("profile");
+          setAuthModalTab("login");
+          setAuthModalOpen(true);
         }}
       />
 
@@ -130,6 +133,13 @@ export default function LearnerHomePage() {
         onClose={() => setShow3D(false)}
         checkedInPoiIds={progress.checkedInPoiIds || []}
         onCheckIn={checkInPoi}
+      />
+
+      {/* Authentication Modal (Login / Register / Forgot Password) */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialTab={authModalTab}
       />
     </div>
   );
