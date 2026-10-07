@@ -7,9 +7,11 @@ export interface UserRecord {
   passwordHash: string;
   displayName: string;
   role: UserRole;
+  status?: "active" | "suspended";
   avatarUrl?: string;
   cefrLevel?: string;
   createdAt: string;
+  lastLoginAt?: string;
 }
 
 // Pre-seeded accounts with hashed passwords for testing:
@@ -24,8 +26,10 @@ const initialUsers: UserRecord[] = [
     passwordHash: bcrypt.hashSync("Admin@123", 10),
     displayName: "Admin Tổng Quản",
     role: "admin",
+    status: "active",
     avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=AdminBoss",
     createdAt: "2026-01-01T00:00:00.000Z",
+    lastLoginAt: new Date().toISOString(),
   },
   {
     id: "usr-reviewer-01",
@@ -33,8 +37,10 @@ const initialUsers: UserRecord[] = [
     passwordHash: bcrypt.hashSync("Reviewer@123", 10),
     displayName: "Kiểm Định Viên (Reviewer)",
     role: "reviewer",
+    status: "active",
     avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=ContentReviewer",
     createdAt: "2026-01-15T00:00:00.000Z",
+    lastLoginAt: new Date(Date.now() - 3600000 * 2).toISOString(),
   },
   {
     id: "usr-creator-01",
@@ -42,8 +48,10 @@ const initialUsers: UserRecord[] = [
     passwordHash: bcrypt.hashSync("Creator@123", 10),
     displayName: "Biên Tập Viên (Creator)",
     role: "creator",
+    status: "active",
     avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=ContentCreator",
     createdAt: "2026-02-01T00:00:00.000Z",
+    lastLoginAt: new Date(Date.now() - 3600000 * 5).toISOString(),
   },
   {
     id: "usr-learner-01",
@@ -51,9 +59,11 @@ const initialUsers: UserRecord[] = [
     passwordHash: bcrypt.hashSync("Learner@123", 10),
     displayName: "Nguyễn Văn Người Học",
     role: "learner",
+    status: "active",
     avatarUrl: "https://api.dicebear.com/7.x/bottts/svg?seed=TravelLearner",
     cefrLevel: "A2",
     createdAt: "2026-03-01T00:00:00.000Z",
+    lastLoginAt: new Date().toISOString(),
   },
 ];
 
@@ -78,11 +88,19 @@ export function authenticateUser(
     return { success: false, error: "Email hoặc mật khẩu không chính xác." };
   }
 
+  if (user.status === "suspended") {
+    return {
+      success: false,
+      error: "Tài khoản của bạn đã bị khóa hoặc tạm ngưng hoạt động bởi Quản trị viên.",
+    };
+  }
+
   const isMatch = bcrypt.compareSync(plainPassword, user.passwordHash);
   if (!isMatch) {
     return { success: false, error: "Email hoặc mật khẩu không chính xác." };
   }
 
+  user.lastLoginAt = new Date().toISOString();
   return { success: true, user };
 }
 
@@ -104,9 +122,11 @@ export function registerUser(params: {
     passwordHash: bcrypt.hashSync(params.password, 10),
     displayName: params.displayName.trim(),
     role: params.role || "learner",
+    status: "active",
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(params.displayName)}`,
     cefrLevel: params.cefrLevel || "A1",
     createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString(),
   };
 
   usersStore.push(newUser);
@@ -115,4 +135,27 @@ export function registerUser(params: {
 
 export function getAllUsers(): UserRecord[] {
   return usersStore.map(({ passwordHash, ...rest }) => rest as UserRecord);
+}
+
+export function updateUserRole(userId: string, newRole: UserRole): { success: boolean; error?: string } {
+  const user = findUserById(userId);
+  if (!user) return { success: false, error: "Không tìm thấy người dùng." };
+  user.role = newRole;
+  return { success: true };
+}
+
+export function toggleUserStatus(userId: string): { success: boolean; newStatus?: "active" | "suspended"; error?: string } {
+  const user = findUserById(userId);
+  if (!user) return { success: false, error: "Không tìm thấy người dùng." };
+  user.status = user.status === "suspended" ? "active" : "suspended";
+  return { success: true, newStatus: user.status };
+}
+
+export function deleteUserAccount(userId: string): boolean {
+  const index = usersStore.findIndex((u) => u.id === userId);
+  if (index !== -1) {
+    usersStore.splice(index, 1);
+    return true;
+  }
+  return false;
 }

@@ -17,6 +17,7 @@ import {
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
+import { TermsPrivacyModal } from "./TermsPrivacyModal";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -48,6 +49,10 @@ export function AuthModal({ isOpen, onClose, initialTab = "login" }: AuthModalPr
 
   // Forgot password form state
   const [forgotEmail, setForgotEmail] = useState("");
+
+  // Terms modal state
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsModalTab, setTermsModalTab] = useState<"terms" | "privacy">("terms");
 
   if (!isOpen) return null;
 
@@ -513,19 +518,42 @@ export function AuthModal({ isOpen, onClose, initialTab = "login" }: AuthModalPr
               </div>
 
               {/* Terms Checkbox */}
-              <label className="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer pt-1">
+              <div className="flex items-start gap-2.5 text-xs text-slate-600 pt-1">
                 <input
                   type="checkbox"
+                  id="agree-terms-cb"
                   checked={agreedTerms}
                   onChange={(e) => setAgreedTerms(e.target.checked)}
-                  className="mt-0.5 rounded text-amber-500 focus:ring-amber-400 accent-amber-500"
+                  className="mt-0.5 rounded text-amber-500 focus:ring-amber-400 accent-amber-500 cursor-pointer"
                 />
-                <span>
+                <label htmlFor="agree-terms-cb" className="cursor-pointer leading-relaxed">
                   Tôi đồng ý với{" "}
-                  <span className="text-amber-600 underline">Điều khoản dịch vụ</span> và{" "}
-                  <span className="text-amber-600 underline">Chính sách quyền riêng tư</span> của Learn.Trip.
-                </span>
-              </label>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setTermsModalTab("terms");
+                      setTermsModalOpen(true);
+                    }}
+                    className="text-amber-600 underline font-semibold hover:text-amber-700 cursor-pointer"
+                  >
+                    Điều khoản dịch vụ
+                  </button>{" "}
+                  và{" "}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setTermsModalTab("privacy");
+                      setTermsModalOpen(true);
+                    }}
+                    className="text-amber-600 underline font-semibold hover:text-amber-700 cursor-pointer"
+                  >
+                    Chính sách quyền riêng tư
+                  </button>{" "}
+                  của Learn.Trip.
+                </label>
+              </div>
 
               <button
                 type="submit"
@@ -583,6 +611,12 @@ export function AuthModal({ isOpen, onClose, initialTab = "login" }: AuthModalPr
           )}
         </div>
       </div>
+
+      <TermsPrivacyModal
+        isOpen={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        initialTab={termsModalTab}
+      />
     </div>
   );
 }

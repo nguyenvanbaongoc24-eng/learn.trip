@@ -152,3 +152,11 @@ export function resetUserProgress(userId: string): UserProgress {
   progressDb.set(userId, fresh);
   return JSON.parse(JSON.stringify(fresh));
 }
+
+/**
+ * Permanently delete user progress from storage (for GDPR / account deletion).
+ */
+export function deleteUserProgress(userId: string): boolean {
+  return progressDb.delete(userId);
+}
+

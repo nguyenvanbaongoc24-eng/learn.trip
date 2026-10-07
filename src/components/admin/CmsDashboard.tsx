@@ -45,9 +45,25 @@ import {
   UserCheck,
   User,
   FileDiff,
+  Users,
+  ShieldAlert,
+  Key,
 } from "lucide-react";
+import { CmsUsersView } from "./CmsUsersView";
+import { CmsAuditLogsView } from "./CmsAuditLogsView";
+import { CmsSessionsView } from "./CmsSessionsView";
 
-type CmsTab = "explorer" | "create" | "media" | "ai_studio" | "review" | "versions" | "analytics";
+type CmsTab =
+  | "explorer"
+  | "create"
+  | "media"
+  | "ai_studio"
+  | "review"
+  | "versions"
+  | "analytics"
+  | "users"
+  | "audit"
+  | "sessions";
 
 interface CmsDashboardProps {
   onBackToGame: () => void;
@@ -88,6 +104,47 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [hasDirtyDraft]);
+
+  // CMS Inactivity Timeout Auto-lock (15 minutes idle security policy)
+  const [isIdleWarning, setIsIdleWarning] = useState(false);
+  const [idleSecondsLeft, setIdleSecondsLeft] = useState(60);
+
+  useEffect(() => {
+    let idleTimer: NodeJS.Timeout;
+
+    const resetIdleTimer = () => {
+      if (isIdleWarning) return;
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        setIsIdleWarning(true);
+        setIdleSecondsLeft(60);
+      }, 15 * 60 * 1000); // 15 minutes
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    events.forEach((ev) => window.addEventListener(ev, resetIdleTimer));
+    resetIdleTimer();
+
+    return () => {
+      clearTimeout(idleTimer);
+      events.forEach((ev) => window.removeEventListener(ev, resetIdleTimer));
+    };
+  }, [isIdleWarning]);
+
+  useEffect(() => {
+    if (!isIdleWarning) return;
+    const interval = setInterval(() => {
+      setIdleSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          window.location.href = "/cms/login";
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isIdleWarning]);
 
   const showNotify = (
     text: string,
@@ -132,6 +189,9 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
     },
     { id: "versions", label: "Phiên bản & Xuất bản", shortLabel: "Xuất bản", icon: History },
     { id: "analytics", label: "Analytics & I/O", shortLabel: "Analytics", icon: BarChart3 },
+    { id: "users", label: "Người dùng & Roles", shortLabel: "Users", icon: Users },
+    { id: "audit", label: "Nhật ký kiểm duyệt", shortLabel: "Nhật ký", icon: ShieldAlert },
+    { id: "sessions", label: "Phiên & Bảo mật", shortLabel: "Bảo mật", icon: Key },
   ];
 
   return (
@@ -316,7 +376,52 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
             showNotify={showNotify}
           />
         )}
+        {activeTab === "users" && (
+          <CmsUsersView currentRole={currentRole} showNotify={showNotify} />
+        )}
+        {activeTab === "audit" && (
+          <CmsAuditLogsView showNotify={showNotify} />
+        )}
+        {activeTab === "sessions" && (
+          <CmsSessionsView showNotify={showNotify} />
+        )}
       </div>
+
+      {/* Inactivity Security Warning Modal */}
+      {isIdleWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-slate-900 border-2 border-amber-500 w-full max-w-md rounded-3xl p-6 text-center space-y-4 shadow-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+              <Key className="w-6 h-6 animate-pulse" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-white">
+                Cảnh báo An toàn Phiên làm việc CMS
+              </h3>
+              <p className="text-xs text-amber-400 font-bold">
+                Bạn đã không thao tác trong 15 phút.
+              </p>
+            </div>
+
+            <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+              Để bảo vệ an toàn dữ liệu bài học và thông tin người dùng, hệ thống sẽ tự động khóa và đăng xuất sau{" "}
+              <strong className="text-rose-400 font-mono text-sm">{idleSecondsLeft} giây</strong>.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsIdleWarning(false);
+                showNotify("Đã tiếp tục phiên làm việc an toàn!");
+              }}
+              className="w-full py-3 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+            >
+              TIẾP TỤC LÀM VIỆC (GIA HẠN PHIÊN)
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Fixed Bottom Navigation Tab Bar */}
       <nav aria-label="Mobile Navigation" className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1.5 flex justify-around items-center min-h-[60px]">

@@ -23,8 +23,13 @@ import {
   Sparkles,
   LogOut,
   Info,
+  Download,
+  Trash2,
+  FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { sounds } from "@/utils/soundEffects";
+import { TermsPrivacyModal } from "../auth/TermsPrivacyModal";
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -46,6 +51,56 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdMessage, setPwdMessage] = useState("");
   const [pwdError, setPwdError] = useState("");
+
+  // Privacy & Compliance states
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  const handleExportData = async () => {
+    try {
+      setExportLoading(true);
+      const res = await fetch("/api/auth/export-data");
+      if (!res.ok) throw new Error("Không thể xuất dữ liệu.");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `learntrip-data-${user?.id || "user"}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert("Lỗi xuất dữ liệu: " + (err.message || String(err)));
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "XÓA VĨNH VIỄN") {
+      setDeleteError("Vui lòng gõ chính xác cụm từ 'XÓA VĨNH VIỄN' để xác nhận.");
+      return;
+    }
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      const res = await fetch("/api/auth/delete-account", { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Không thể xóa tài khoản.");
+      }
+      alert("Tài khoản của bạn đã được xóa vĩnh viễn.");
+      window.location.href = "/";
+    } catch (err: any) {
+      setDeleteError(err.message || "Lỗi khi xóa tài khoản.");
+      setDeleteLoading(false);
+    }
+  };
 
   const toggleSound = () => {
     const next = sounds.toggleSound();
@@ -390,11 +445,87 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             )}
           </div>
 
+          {/* Export Personal Data */}
+          <button
+            type="button"
+            onClick={handleExportData}
+            disabled={exportLoading}
+            className="w-full px-5 py-4 flex items-center justify-between border-t border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer text-slate-700"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Download className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-bold text-slate-800">
+                  {locale === "vi" ? "Xuất dữ liệu cá nhân (JSON)" : "Export Personal Data"}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  {locale === "vi"
+                    ? "Tải bản sao hồ sơ, XP, streak và tem hộ chiếu"
+                    : "Download copy of profile, XP, streak and stamps"}
+                </div>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-blue-600">
+              {exportLoading ? "Đang tải..." : "Tải về"}
+            </span>
+          </button>
+
+          {/* Terms & Privacy */}
+          <button
+            type="button"
+            onClick={() => setTermsModalOpen(true)}
+            className="w-full px-5 py-4 flex items-center justify-between border-t border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer text-slate-700"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-slate-600" />
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-bold text-slate-800">
+                  {locale === "vi" ? "Điều khoản & Quyền riêng tư" : "Terms & Privacy"}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  {locale === "vi"
+                    ? "Chính sách bảo mật theo Nghị định 13/2023/NĐ-CP"
+                    : "Privacy policy & Terms of Service"}
+                </div>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </button>
+
+          {/* Delete Account Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteConfirmText("");
+              setDeleteError("");
+              setDeleteModalOpen(true);
+            }}
+            className="w-full px-5 py-4 flex items-center gap-3 border-t border-slate-100 hover:bg-rose-50 transition-colors cursor-pointer text-rose-600"
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
+              <Trash2 className="w-5 h-5 text-rose-600" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-bold text-rose-700">
+                {locale === "vi" ? "Yêu cầu xóa tài khoản vĩnh viễn" : "Delete Account Permanently"}
+              </div>
+              <div className="text-[11px] text-rose-500">
+                {locale === "vi"
+                  ? "Xóa vĩnh viễn toàn bộ XP, thành tích và thông tin cá nhân"
+                  : "Irreversibly delete profile and progress"}
+              </div>
+            </div>
+          </button>
+
           {/* Logout */}
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full px-5 py-4 flex items-center gap-3 hover:bg-rose-50 transition-colors cursor-pointer text-rose-600"
+            className="w-full px-5 py-4 flex items-center gap-3 border-t border-slate-100 hover:bg-rose-50 transition-colors cursor-pointer text-rose-600"
           >
             <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
               <LogOut className="w-5 h-5 text-rose-500" />
@@ -457,8 +588,74 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
       {/* App Version */}
       <div className="text-center text-[11px] text-slate-400 font-medium pt-2">
-        Learn.Trip v2.0.0 — Phase 3
+        Learn.Trip v2.0.0 — An toàn & Bảo mật
       </div>
+
+      {/* Terms & Privacy Modal */}
+      <TermsPrivacyModal
+        isOpen={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+      />
+
+      {/* Delete Account 2-Step Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-rose-200 p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-1">
+              <h3 className="text-lg font-black text-slate-900">
+                Xác nhận Xóa vĩnh viễn Tài khoản
+              </h3>
+              <p className="text-xs text-rose-600 font-medium">
+                CẢNH BÁO: Hành động này KHÔNG THỂ HOÀN TÁC!
+              </p>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
+              Toàn bộ dữ liệu điểm kinh nghiệm (XP), chuỗi ngày streak, địa danh đã mở khóa và tem hộ chiếu của bạn sẽ bị xóa vĩnh viễn khỏi máy chủ theo yêu cầu quyền riêng tư.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">
+                Để xác nhận, vui lòng gõ chính xác:{" "}
+                <span className="text-rose-600 font-black">XÓA VĨNH VIỄN</span>
+              </label>
+              <input
+                type="text"
+                placeholder="XÓA VĨNH VIỄN"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-rose-500 font-bold"
+              />
+              {deleteError && (
+                <p className="text-[11px] text-rose-600 font-bold">{deleteError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteModalOpen(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading || deleteConfirmText !== "XÓA VĨNH VIỄN"}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{deleteLoading ? "Đang xóa..." : "Xác nhận Xóa"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
