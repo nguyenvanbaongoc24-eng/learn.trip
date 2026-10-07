@@ -5,6 +5,8 @@ import confetti from "canvas-confetti";
 import { useGame } from "@/context/GameContext";
 import { Sparkles, Trophy, MapPin, ArrowRight } from "lucide-react";
 import { MascotCharacter } from "@/components/mascot/MascotCharacter";
+import { SquishButton } from "@/components/ui/SquishButton";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 interface CelebrationModalProps {
   onAfterDismiss?: () => void;
@@ -87,7 +89,7 @@ export function CelebrationModal({ onAfterDismiss }: CelebrationModalProps) {
               <Trophy className="w-4 h-4 text-amber-600" /> Kinh nghiệm đạt được
             </span>
             <span className="font-black text-amber-600 text-base">
-              +{celebration.xpEarned} XP
+              +<AnimatedCounter value={celebration.xpEarned} /> XP
             </span>
           </div>
 
@@ -95,7 +97,10 @@ export function CelebrationModal({ onAfterDismiss }: CelebrationModalProps) {
           {celebration.stamp && (
             <div className="flex items-center justify-between px-3 py-2 bg-emerald-50 rounded-xl border border-emerald-200">
               <span className="flex items-center gap-2 text-sm font-bold text-emerald-900">
-                <span className="text-lg">{celebration.stamp.symbol}</span> Dấu ấn Hộ chiếu
+                <span className="text-2xl animate-stamp inline-block filter drop-shadow-sm">
+                  {celebration.stamp.symbol}
+                </span>{" "}
+                Dấu ấn Hộ chiếu
               </span>
               <span className="font-extrabold text-emerald-700 text-xs">
                 {t(celebration.stamp.title)}
@@ -125,14 +130,15 @@ export function CelebrationModal({ onAfterDismiss }: CelebrationModalProps) {
         </div>
 
         {/* Action Button */}
-        <button
-          type="button"
+        <SquishButton
+          variant="amber"
+          size="lg"
+          fullWidth
           onClick={handleDismiss}
-          className="w-full py-4 px-6 bg-linear-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-black text-base rounded-2xl shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          iconRight={<ArrowRight className="w-5 h-5" />}
         >
-          <span>{isLocationUnlock ? "Khám phá địa danh mới →" : "Tiếp tục hành trình"}</span>
-          <ArrowRight className="w-5 h-5" />
-        </button>
+          {isLocationUnlock ? "Khám phá địa danh mới →" : "Tiếp tục hành trình"}
+        </SquishButton>
       </div>
     </div>
   );

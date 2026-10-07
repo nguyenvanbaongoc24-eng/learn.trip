@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { sounds } from "@/utils/soundEffects";
 import { TermsPrivacyModal } from "../auth/TermsPrivacyModal";
+import { ParentalGateModal } from "@/components/ui/ParentalGateModal";
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -55,6 +56,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   // Privacy & Compliance states
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [parentalGateOpen, setParentalGateOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -496,13 +498,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             <ChevronRight className="w-4 h-4 text-slate-400" />
           </button>
 
-          {/* Delete Account Button */}
+          {/* Delete Account Button (Protected by Parental Gate) */}
           <button
             type="button"
             onClick={() => {
-              setDeleteConfirmText("");
-              setDeleteError("");
-              setDeleteModalOpen(true);
+              setParentalGateOpen(true);
             }}
             className="w-full px-5 py-4 flex items-center gap-3 border-t border-slate-100 hover:bg-rose-50 transition-colors cursor-pointer text-rose-600"
           >
@@ -595,6 +595,20 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       <TermsPrivacyModal
         isOpen={termsModalOpen}
         onClose={() => setTermsModalOpen(false)}
+      />
+
+      {/* Parental Gate Modal before Delete Account */}
+      <ParentalGateModal
+        isOpen={parentalGateOpen}
+        onClose={() => setParentalGateOpen(false)}
+        title="Xác thực Phụ huynh"
+        description="Thao tác xóa tài khoản không thể phục hồi. Phụ huynh vui lòng xác thực phép tính:"
+        onSuccess={() => {
+          setParentalGateOpen(false);
+          setDeleteConfirmText("");
+          setDeleteError("");
+          setDeleteModalOpen(true);
+        }}
       />
 
       {/* Delete Account 2-Step Confirmation Modal */}

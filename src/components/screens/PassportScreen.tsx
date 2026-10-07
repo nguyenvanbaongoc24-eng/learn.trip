@@ -5,10 +5,14 @@ import { useGame } from "@/context/GameContext";
 import { initialPassportStamps } from "@/data/mockContent";
 import { LocationCategory } from "@/types/content";
 import { BookOpen, Sparkles, Filter, CheckCircle2 } from "lucide-react";
+import { StampModal } from "../ui/StampModal";
+import { sounds } from "@/utils/soundEffects";
+import { PassportStamp } from "@/types/content";
 
 export function PassportScreen() {
   const { progress, locale, t } = useGame();
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [selectedStamp, setSelectedStamp] = useState<PassportStamp | null>(null);
 
   const allStampsList = Object.values(initialPassportStamps);
 
@@ -109,10 +113,14 @@ export function PassportScreen() {
             return (
               <div
                 key={stamp.id}
-                className={`relative rounded-3xl p-5 border-2 transition-all duration-300 flex flex-col justify-between min-h-[190px] ${
+                onClick={() => {
+                  sounds.playClick();
+                  setSelectedStamp(stamp);
+                }}
+                className={`relative rounded-3xl p-5 border-2 transition-all duration-300 flex flex-col justify-between min-h-[190px] cursor-pointer select-none ${
                   isCollected
-                    ? "bg-amber-950/70 border-amber-400/70 shadow-lg shadow-amber-950/40 transform hover:scale-102"
-                    : "bg-amber-950/30 border-amber-800/30 opacity-60"
+                    ? "bg-amber-950/70 border-amber-400/70 shadow-lg shadow-amber-950/40 transform hover:scale-102 hover:border-amber-300"
+                    : "bg-amber-950/30 border-amber-800/30 opacity-60 hover:opacity-80"
                 }`}
               >
                 {/* Stamp Header */}
@@ -162,7 +170,7 @@ export function PassportScreen() {
                     </>
                   ) : (
                     <span className="text-amber-500/60 text-[11px] italic">
-                      Hoàn thành nhiệm vụ để đóng dấu
+                      Bấm để xem chi tiết
                     </span>
                   )}
                 </div>
@@ -171,6 +179,18 @@ export function PassportScreen() {
           })}
         </div>
       </div>
+
+      {/* Stamp Details & Interactive Re-stamp Modal */}
+      <StampModal
+        stamp={selectedStamp}
+        isCollected={collectedStampIds.includes(selectedStamp?.id || "")}
+        unlockedAt={
+          progress.collectedStamps.find((s) => s.id === selectedStamp?.id)?.unlockedAt
+        }
+        onClose={() => setSelectedStamp(null)}
+        locale={locale}
+        t={t}
+      />
     </div>
   );
 }

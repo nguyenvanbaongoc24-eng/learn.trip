@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { sounds } from "@/utils/soundEffects";
 import { tabColors, motionVariants, springs } from "@/lib/design/tokens";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 // ─── Tab definitions ────────────────────────────────────────
 export type LearnerTab = "explore" | "passport" | "challenges" | "profile";
@@ -305,7 +306,7 @@ export function LearnerTopBar({ activeTab, setActiveTab, onOpenAuth, onOpenSetti
             whileHover={{ scale: 1.05 }}
           >
             <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-            <span>{progress.xp}</span>
+            <AnimatedCounter value={progress.xp} />
           </motion.div>
 
           {/* Sync — compact icon */}

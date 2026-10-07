@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 
 import { MascotCharacter } from "@/components/mascot/MascotCharacter";
+import { CardSkeleton } from "@/components/ui/Skeleton";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 interface HomeScreenProps {
   onNavigateTab: (tab: TabType) => void;
@@ -47,6 +49,19 @@ export function HomeScreen({ onNavigateTab, onOpenLocation, onOpen3D }: HomeScre
     100,
     Math.round((completedCount / Math.max(1, totalPlayableQuests)) * 100)
   );
+
+  if (locations.length === 0 || !currentLocation) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        <CardSkeleton />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 md:py-10 space-y-8 animate-fadeIn pb-24 md:pb-12">

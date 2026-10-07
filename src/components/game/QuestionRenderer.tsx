@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Question, LocalizedText } from "@/types/content";
 import { CheckCircle2, XCircle, Volume2, Sparkles, RotateCcw, VolumeX, Headphones, Play } from "lucide-react";
 import { sounds } from "@/utils/soundEffects";
+import { SquishButton } from "@/components/ui/SquishButton";
 
 interface QuestionRendererProps {
   question: Question;
@@ -279,7 +280,7 @@ function MultipleChoiceView({
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-fadeIn">
+          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-shake">
             <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold">
@@ -292,27 +293,18 @@ function MultipleChoiceView({
           </div>
         )}
 
-        <button
-          type="button"
+        <SquishButton
+          variant={isSubmitted && isCorrect ? "primary" : "amber"}
+          size="lg"
+          fullWidth
           disabled={!selectedId}
           onClick={isSubmitted && isCorrect ? proceedNext : handleCheck}
-          className={`w-full py-3.5 px-6 rounded-2xl font-bold text-base transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
-            !selectedId
-              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-              : isSubmitted && isCorrect
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.99] shadow-emerald-600/30"
-              : "bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white active:scale-[0.99]"
-          }`}
+          icon={isSubmitted && isCorrect ? <CheckCircle2 className="w-5 h-5" /> : undefined}
         >
-          {isSubmitted && isCorrect ? (
-            <>
-              <CheckCircle2 className="w-5 h-5" />
-              <span>{locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →"}</span>
-            </>
-          ) : (
-            locale === "vi" ? "Kiểm tra đáp án" : "Check Answer"
-          )}
-        </button>
+          {isSubmitted && isCorrect
+            ? (locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →")
+            : (locale === "vi" ? "Kiểm tra đáp án" : "Check Answer")}
+        </SquishButton>
       </div>
     </div>
   );
@@ -483,7 +475,7 @@ function PictureMatchView({
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-fadeIn">
+          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-shake">
             <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <p className="font-bold">
               {locale === "vi" ? "Chưa đúng hình này, hãy chọn lại nhé!" : "Not this picture, try another one!"}
@@ -491,27 +483,18 @@ function PictureMatchView({
           </div>
         )}
 
-        <button
-          type="button"
+        <SquishButton
+          variant={isSubmitted && isCorrect ? "primary" : "sky"}
+          size="lg"
+          fullWidth
           disabled={!selectedId}
           onClick={isSubmitted && isCorrect ? proceedNext : handleCheck}
-          className={`w-full py-3.5 px-6 rounded-2xl font-bold text-base transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
-            !selectedId
-              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-              : isSubmitted && isCorrect
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.99] shadow-emerald-600/30"
-              : "bg-linear-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white active:scale-[0.99]"
-          }`}
+          icon={isSubmitted && isCorrect ? <CheckCircle2 className="w-5 h-5" /> : undefined}
         >
-          {isSubmitted && isCorrect ? (
-            <>
-              <CheckCircle2 className="w-5 h-5" />
-              <span>{locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →"}</span>
-            </>
-          ) : (
-            locale === "vi" ? "Kiểm tra hình ảnh" : "Check Image Match"
-          )}
-        </button>
+          {isSubmitted && isCorrect
+            ? (locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →")
+            : (locale === "vi" ? "Kiểm tra hình ảnh" : "Check Image Match")}
+        </SquishButton>
       </div>
     </div>
   );
@@ -770,7 +753,7 @@ function WordBuilderView({
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl mb-4 text-rose-900 text-sm flex items-start justify-between gap-2.5 animate-fadeIn">
+          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start justify-between gap-2.5 animate-shake">
             <div className="flex items-start gap-2.5">
               <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
@@ -794,27 +777,18 @@ function WordBuilderView({
           </div>
         )}
 
-        <button
-          type="button"
+        <SquishButton
+          variant={isSubmitted && isCorrect ? "primary" : "primary"}
+          size="lg"
+          fullWidth
           disabled={!isComplete}
           onClick={isSubmitted && isCorrect ? proceedNext : handleCheck}
-          className={`w-full py-3.5 px-6 rounded-2xl font-bold text-base transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
-            !isComplete
-              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-              : isSubmitted && isCorrect
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.99] shadow-emerald-600/30"
-              : "bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white active:scale-[0.99]"
-          }`}
+          icon={isSubmitted && isCorrect ? <CheckCircle2 className="w-5 h-5" /> : undefined}
         >
-          {isSubmitted && isCorrect ? (
-            <>
-              <CheckCircle2 className="w-5 h-5" />
-              <span>{locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →"}</span>
-            </>
-          ) : (
-            locale === "vi" ? "Kiểm tra từ ghép" : "Check Word"
-          )}
-        </button>
+          {isSubmitted && isCorrect
+            ? (locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →")
+            : (locale === "vi" ? "Kiểm tra từ ghép" : "Check Word")}
+        </SquishButton>
       </div>
     </div>
   );
@@ -1028,7 +1002,7 @@ function ListenChooseView({
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-fadeIn">
+          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-shake">
             <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-bold">
@@ -1038,27 +1012,18 @@ function ListenChooseView({
           </div>
         )}
 
-        <button
-          type="button"
+        <SquishButton
+          variant={isSubmitted && isCorrect ? "primary" : "violet"}
+          size="lg"
+          fullWidth
           disabled={!selectedId}
           onClick={isSubmitted && isCorrect ? proceedNext : handleCheck}
-          className={`w-full py-3.5 px-6 rounded-2xl font-bold text-base transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
-            !selectedId
-              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-              : isSubmitted && isCorrect
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.99] shadow-emerald-600/30"
-              : "bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white active:scale-[0.99]"
-          }`}
+          icon={isSubmitted && isCorrect ? <CheckCircle2 className="w-5 h-5" /> : undefined}
         >
-          {isSubmitted && isCorrect ? (
-            <>
-              <CheckCircle2 className="w-5 h-5" />
-              <span>{locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →"}</span>
-            </>
-          ) : (
-            locale === "vi" ? "Kiểm tra đáp án" : "Check Answer"
-          )}
-        </button>
+          {isSubmitted && isCorrect
+            ? (locale === "vi" ? "Tiếp tục câu tiếp theo →" : "Continue to Next →")
+            : (locale === "vi" ? "Kiểm tra đáp án" : "Check Answer")}
+        </SquishButton>
       </div>
     </div>
   );

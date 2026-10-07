@@ -16,6 +16,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { motionVariants, springs } from "@/lib/design/tokens";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 // Daily challenge mock data
 const dailyChallenges = [
@@ -255,7 +256,7 @@ export function ChallengesScreen() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
-                    {entry.xp}
+                    <AnimatedCounter value={entry.xp} />
                   </span>
                 </div>
               </motion.div>
