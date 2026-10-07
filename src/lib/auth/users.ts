@@ -70,6 +70,20 @@ const initialUsers: UserRecord[] = [
 // In-memory persistent state (shared across requests in Node process)
 let usersStore: UserRecord[] = [...initialUsers];
 
+/**
+ * Checks whether an email is designated as an Admin via environment variables (ADMIN_EMAILS or ADMIN_EMAIL)
+ */
+export function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const adminEnv = (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "").trim();
+  const list = adminEnv
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  list.push("admin@learntrip.vn");
+  return list.includes(email.trim().toLowerCase());
+}
+
 export function findUserByEmail(email: string): UserRecord | undefined {
   const normalized = email.trim().toLowerCase();
   return usersStore.find((u) => u.email.toLowerCase() === normalized);
@@ -100,6 +114,11 @@ export function authenticateUser(
     return { success: false, error: "Email hoặc mật khẩu không chính xác." };
   }
 
+  // Auto-promote to admin if email matches ADMIN_EMAILS environment variable
+  if (isAdminEmail(user.email) && user.role !== "admin") {
+    user.role = "admin";
+  }
+
   user.lastLoginAt = new Date().toISOString();
   return { success: true, user };
 }
@@ -116,12 +135,17 @@ export function registerUser(params: {
     return { success: false, error: "Email này đã được đăng ký tài khoản." };
   }
 
+  // Automatically assign "admin" role if email matches ADMIN_EMAILS
+  const assignedRole: UserRole = isAdminEmail(params.email)
+    ? "admin"
+    : params.role || "learner";
+
   const newUser: UserRecord = {
     id: `usr-${Date.now()}`,
     email: params.email.trim().toLowerCase(),
     passwordHash: bcrypt.hashSync(params.password, 10),
     displayName: params.displayName.trim(),
-    role: params.role || "learner",
+    role: assignedRole,
     status: "active",
     avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(params.displayName)}`,
     cefrLevel: params.cefrLevel || "A1",
@@ -131,6 +155,37 @@ export function registerUser(params: {
 
   usersStore.push(newUser);
   return { success: true, user: newUser };
+}
+
+/**
+ * Programmatically seed or promote an admin account
+ */
+export function seedOrPromoteAdmin(
+  email: string,
+  plainPassword = "AdminPassword@123",
+  displayName = "Quản Trị Viên"
+): UserRecord {
+  const existing = findUserByEmail(email);
+  if (existing) {
+    existing.role = "admin";
+    existing.status = "active";
+    existing.passwordHash = bcrypt.hashSync(plainPassword, 10);
+    return existing;
+  }
+
+  const admin: UserRecord = {
+    id: `usr-admin-${Date.now()}`,
+    email: email.trim().toLowerCase(),
+    passwordHash: bcrypt.hashSync(plainPassword, 10),
+    displayName,
+    role: "admin",
+    status: "active",
+    avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(displayName)}`,
+    createdAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString(),
+  };
+  usersStore.unshift(admin);
+  return admin;
 }
 
 export function getAllUsers(): UserRecord[] {

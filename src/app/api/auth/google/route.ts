@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findUserByEmail, registerUser } from "@/lib/auth/users";
+import { findUserByEmail, registerUser, isAdminEmail } from "@/lib/auth/users";
 import { signSessionToken, SESSION_COOKIE_NAME } from "@/lib/auth/session";
 
 export async function POST(req: NextRequest) {
@@ -15,10 +15,12 @@ export async function POST(req: NextRequest) {
         email,
         password: `GoogleOauth_${Date.now()}_Secret!`,
         displayName,
-        role: "learner",
+        role: isAdminEmail(email) ? "admin" : "learner",
         cefrLevel: "B1",
       });
       user = reg.user;
+    } else if (isAdminEmail(user.email) && user.role !== "admin") {
+      user.role = "admin";
     }
 
     if (!user) {
