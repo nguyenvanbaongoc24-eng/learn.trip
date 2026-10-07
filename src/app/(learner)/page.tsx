@@ -2,13 +2,20 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
-import { Navbar, MobileTabBar, TabType } from "@/components/navigation/Navbar";
+import {
+  LearnerSidebar,
+  LearnerTopBar,
+  LearnerBottomTabs,
+  LearnerTab,
+} from "@/components/navigation/LearnerNav";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { MapScreen } from "@/components/screens/MapScreen";
 import { PassportScreen } from "@/components/screens/PassportScreen";
 import { ProfileScreen } from "@/components/screens/ProfileScreen";
+import { ChallengesScreen } from "@/components/screens/ChallengesScreen";
 import { SettingsScreen } from "@/components/screens/SettingsScreen";
 import { LocationPreviewModal } from "@/components/screens/LocationPreviewModal";
 import { QuestModal } from "@/components/game/QuestModal";
@@ -16,6 +23,7 @@ import { CelebrationModal } from "@/components/game/CelebrationModal";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { OnboardingModal } from "@/components/auth/OnboardingModal";
 import { Location, Quest } from "@/types/content";
+import { motionVariants } from "@/lib/design/tokens";
 
 // Dynamic import for 3D component (no SSR - Three.js needs browser)
 const Explore3DModal = dynamic(
@@ -28,7 +36,7 @@ const ONBOARDING_DONE_KEY = "learntrip_onboarding_done";
 export default function LearnerHomePage() {
   const { currentLocation, getNextLocation, progress, checkInPoi } = useGame();
   const { user, isAuthenticated, refreshSession } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>("home");
+  const [activeTab, setActiveTab] = useState<LearnerTab>("explore");
   const [showSettings, setShowSettings] = useState(false);
   const [previewLocation, setPreviewLocation] = useState<Location | null>(null);
   const [activeQuest, setActiveQuest] = useState<Quest | null>(null);
@@ -106,42 +114,62 @@ export default function LearnerHomePage() {
     setShowOnboarding(false);
   };
 
+  // Handle tab changes — close settings if open
+  const handleTabChange = (tab: LearnerTab) => {
+    if (showSettings) setShowSettings(false);
+    setActiveTab(tab);
+  };
+
   // Handle opening settings
   const handleOpenSettings = () => {
     setShowSettings(true);
   };
 
-  // Show Settings Screen
-  if (showSettings) {
-    return (
-      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 relative">
-        <Navbar
-          activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setShowSettings(false);
-            setActiveTab(tab);
-          }}
-          onOpenAuth={() => {
-            setAuthModalTab("login");
-            setAuthModalOpen(true);
-          }}
-          onOpenSettings={handleOpenSettings}
-        />
+  const openAuthModal = () => {
+    setAuthModalTab("login");
+    setAuthModalOpen(true);
+  };
 
-        <main className="flex-1 relative z-10 pb-16 md:pb-6">
-          <SettingsScreen onBack={() => setShowSettings(false)} />
-        </main>
+  // ─── Render screen content ────────────────────────────────
+  const renderContent = () => {
+    if (showSettings) {
+      return <SettingsScreen onBack={() => setShowSettings(false)} />;
+    }
 
-        <MobileTabBar
-          activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setShowSettings(false);
-            setActiveTab(tab);
-          }}
-        />
-      </div>
-    );
-  }
+    switch (activeTab) {
+      case "explore":
+        return (
+          <>
+            <HomeScreen
+              onNavigateTab={(tab: string) => {
+                // Map old tab names to new ones
+                if (tab === "home" || tab === "map") setActiveTab("explore");
+                else if (tab === "passport") setActiveTab("passport");
+                else if (tab === "profile") setActiveTab("profile");
+                else setActiveTab(tab as LearnerTab);
+              }}
+              onOpenLocation={handleOpenLocation}
+              onOpen3D={(locId) => handleOpen3D(locId || currentLocation?.id || "loc-hanoi")}
+            />
+            {/* Map is now integrated into explore — show below home */}
+            <div className="mt-4">
+              <MapScreen
+                onSelectLocation={handleOpenLocation}
+                onOpen3D={(locId) => handleOpen3D(locId)}
+              />
+            </div>
+          </>
+        );
+      case "passport":
+        return <PassportScreen />;
+      case "challenges":
+        return <ChallengesScreen />;
+      case "profile":
+        return <ProfileScreen />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 relative">
@@ -149,44 +177,46 @@ export default function LearnerHomePage() {
       <div className="absolute top-0 left-0 right-0 h-96 overflow-hidden pointer-events-none z-0">
         <img
           src={currentLocation?.heroImage || "/assets/locations/hanoi.jpg"}
-          alt="Vietnam Scenic Backdrop"
-          className="w-full h-full object-cover opacity-20 filter blur-xs"
+          alt=""
+          className="w-full h-full object-cover opacity-15 filter blur-xs"
+          role="presentation"
         />
-        <div className="absolute inset-0 bg-linear-to-b from-transparent via-slate-50/80 to-slate-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-50/80 to-slate-50" />
       </div>
 
-      {/* Top Navbar */}
-      <Navbar
+      {/* Desktop Sidebar */}
+      <LearnerSidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onOpenAuth={() => {
-          setAuthModalTab("login");
-          setAuthModalOpen(true);
-        }}
+        setActiveTab={handleTabChange}
+        onOpenAuth={openAuthModal}
+        onOpenSettings={handleOpenSettings}
+      />
+
+      {/* Top Bar */}
+      <LearnerTopBar
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        onOpenAuth={openAuthModal}
         onOpenSettings={handleOpenSettings}
       />
 
       {/* Main Screen Content */}
-      <main className="flex-1 relative z-10 pb-16 md:pb-6">
-        {activeTab === "home" && (
-          <HomeScreen
-            onNavigateTab={setActiveTab}
-            onOpenLocation={handleOpenLocation}
-            onOpen3D={(locId) => handleOpen3D(locId || currentLocation?.id || "loc-hanoi")}
-          />
-        )}
-        {activeTab === "map" && (
-          <MapScreen
-            onSelectLocation={handleOpenLocation}
-            onOpen3D={(locId) => handleOpen3D(locId)}
-          />
-        )}
-        {activeTab === "passport" && <PassportScreen />}
-        {activeTab === "profile" && <ProfileScreen />}
+      <main className="flex-1 relative z-10 pb-20 md:pb-6 md:ml-[220px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={showSettings ? "settings" : activeTab}
+            variants={motionVariants.tabContent}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Mobile Bottom Tab Bar */}
-      <MobileTabBar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <LearnerBottomTabs activeTab={activeTab} setActiveTab={handleTabChange} />
 
       {/* Location Preview Drawer / Modal */}
       {previewLocation && (

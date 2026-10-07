@@ -16,6 +16,8 @@ import {
   Globe,
 } from "lucide-react";
 
+import { MascotCharacter } from "@/components/mascot/MascotCharacter";
+
 interface HomeScreenProps {
   onNavigateTab: (tab: TabType) => void;
   onOpenLocation: (location: Location) => void;
@@ -48,20 +50,29 @@ export function HomeScreen({ onNavigateTab, onOpenLocation, onOpen3D }: HomeScre
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 md:py-10 space-y-8 animate-fadeIn pb-24 md:pb-12">
-      {/* Hero Welcome Banner */}
-      <div className="space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-black uppercase tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-          {locale === "vi" ? "Học tiếng Anh • Khám phá Việt Nam" : "Learn a language • Explore Vietnam"}
+      {/* Hero Welcome Banner with Mascot */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-5 rounded-3xl border border-amber-200/50">
+        <div className="space-y-1.5 flex-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-black uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+            {locale === "vi" ? "Học tiếng Anh • Khám phá Việt Nam" : "Learn a language • Explore Vietnam"}
+          </div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
+            {locale === "vi" ? "Chào bạn, Nhà Thám Hiểm! 👋" : "Good morning, Explorer! 👋"}
+          </h1>
+          <p className="text-slate-600 text-sm sm:text-base">
+            {locale === "vi"
+              ? "Mỗi bài học tiếng Anh mở ra một mảnh ghép kỳ diệu về vẻ đẹp và văn hóa Việt Nam."
+              : "Every English quest unlocks a fascinating piece of Vietnam's landmarks and culture."}
+          </p>
         </div>
-        <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-          {locale === "vi" ? "Chào bạn, Nhà Thám Hiểm! 👋" : "Good morning, Explorer! 👋"}
-        </h1>
-        <p className="text-slate-600 text-base">
-          {locale === "vi"
-            ? "Mỗi bài học tiếng Anh mở ra một mảnh ghép kỳ diệu về vẻ đẹp và văn hóa Việt Nam."
-            : "Every English quest unlocks a fascinating piece of Vietnam's landmarks and culture."}
-        </p>
+        <div className="shrink-0 flex justify-center sm:justify-end">
+          <MascotCharacter
+            mood="waving"
+            size={96}
+            speechText={locale === "vi" ? "Đi khám phá thôi! ✨" : "Let's explore! ✨"}
+          />
+        </div>
       </div>
 
       {/* Main Continue Journey Card with Vietnam Landmark Hero Background */}

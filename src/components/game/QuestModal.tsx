@@ -6,6 +6,7 @@ import { useGame } from "@/context/GameContext";
 import { QuestionRenderer } from "./QuestionRenderer";
 import { X, Trophy, Flame, Heart, Star, Sparkles, Volume2, ArrowRight, CheckCircle2, Globe } from "lucide-react";
 import { sounds } from "@/utils/soundEffects";
+import { MascotCharacter } from "@/components/mascot/MascotCharacter";
 
 interface QuestModalProps {
   quest: Quest;
@@ -197,6 +198,19 @@ export function QuestModal({ quest, onClose, onOpen3D }: QuestModalProps) {
           ) : (
             /* Comprehensive Lesson Result Screen (per 07-PLAYER-UX.md) */
             <div className="space-y-6 animate-fadeIn py-2">
+              {/* Mascot celebration */}
+              <div className="flex justify-center -mb-2">
+                <MascotCharacter
+                  mood="cheering"
+                  size={110}
+                  speechText={
+                    hearts === 3
+                      ? (locale === "vi" ? "Tuyệt vời ông mặt trời! 🎉" : "Unstoppable! 🎉")
+                      : (locale === "vi" ? "Chúc mừng bạn nhé! ✨" : "Well done! ✨")
+                  }
+                />
+              </div>
+
               {/* Star Rating Banner */}
               <div className="text-center space-y-2">
                 <div className="flex items-center justify-center gap-2 mb-1">

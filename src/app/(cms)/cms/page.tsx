@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { AuthProvider } from "@/context/AuthContext";
 import { GameProvider } from "@/context/GameContext";
 import { CmsDashboard } from "@/components/admin/CmsDashboard";
 
@@ -17,8 +18,10 @@ function CmsDashboardWrapper() {
 
 export default function CmsPage() {
   return (
-    <GameProvider>
-      <CmsDashboardWrapper />
-    </GameProvider>
+    <AuthProvider>
+      <GameProvider>
+        <CmsDashboardWrapper />
+      </GameProvider>
+    </AuthProvider>
   );
 }

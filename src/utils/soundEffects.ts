@@ -41,8 +41,35 @@ class SoundManager {
     return this.soundEnabled;
   }
 
+  // Haptic feedback for mobile devices
+  public triggerHaptic(type: "light" | "medium" | "heavy" | "success" | "error" = "light") {
+    if (typeof window === "undefined" || !("vibrate" in navigator)) return;
+    try {
+      switch (type) {
+        case "light":
+          navigator.vibrate(12);
+          break;
+        case "medium":
+          navigator.vibrate(30);
+          break;
+        case "heavy":
+          navigator.vibrate(55);
+          break;
+        case "success":
+          navigator.vibrate([20, 40, 30]);
+          break;
+        case "error":
+          navigator.vibrate([40, 60, 40]);
+          break;
+      }
+    } catch {
+      // Ignore vibration errors if restricted
+    }
+  }
+
   // Button Tap / UI Click
   public playClick() {
+    this.triggerHaptic("light");
     if (!this.soundEnabled) return;
     const ctx = this.getContext();
     if (!ctx) return;
@@ -66,6 +93,7 @@ class SoundManager {
 
   // Correct Answer (Upward melodic chord: C5 -> E5 -> G5)
   public playCorrect() {
+    this.triggerHaptic("success");
     if (!this.soundEnabled) return;
     const ctx = this.getContext();
     if (!ctx) return;
@@ -91,6 +119,7 @@ class SoundManager {
 
   // Incorrect Answer (Gentle bounce down, not harsh)
   public playIncorrect() {
+    this.triggerHaptic("error");
     if (!this.soundEnabled) return;
     const ctx = this.getContext();
     if (!ctx) return;
@@ -116,6 +145,7 @@ class SoundManager {
 
   // Quest Complete / Level Up Fanfare
   public playVictory() {
+    this.triggerHaptic("success");
     if (!this.soundEnabled) return;
     const ctx = this.getContext();
     if (!ctx) return;
@@ -151,6 +181,7 @@ class SoundManager {
 
   // Stamp Thud (Deep heavy impact on passport paper)
   public playStamp() {
+    this.triggerHaptic("heavy");
     if (!this.soundEnabled) return;
     const ctx = this.getContext();
     if (!ctx) return;

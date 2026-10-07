@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useGame } from "@/context/GameContext";
 import { Sparkles, Trophy, MapPin, ArrowRight } from "lucide-react";
+import { MascotCharacter } from "@/components/mascot/MascotCharacter";
 
 interface CelebrationModalProps {
   onAfterDismiss?: () => void;
@@ -53,11 +54,14 @@ export function CelebrationModal({ onAfterDismiss }: CelebrationModalProps) {
   return (
     <div className="fixed inset-0 z-60 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
       <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 text-center shadow-2xl border-4 border-amber-300 transform animate-scaleUp">
-        {/* Animated Icon Glow */}
-        <div className="relative w-28 h-28 mx-auto mb-5 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-linear-to-tr from-amber-400 to-orange-400 blur-xl opacity-60 animate-pulse" />
-          <div className="relative w-24 h-24 rounded-full bg-linear-to-tr from-amber-400 via-amber-300 to-orange-400 flex items-center justify-center text-5xl shadow-xl shadow-amber-500/40 border-4 border-white">
-            {celebration.badgeIcon || celebration.stamp?.symbol || (isLocationUnlock ? "🗺️" : "🏆")}
+        {/* Mascot + Animated Icon Glow */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <MascotCharacter mood="cheering" size={72} />
+          <div className="relative w-20 h-20 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-linear-to-tr from-amber-400 to-orange-400 blur-xl opacity-60 animate-pulse" />
+            <div className="relative w-18 h-18 rounded-full bg-linear-to-tr from-amber-400 via-amber-300 to-orange-400 flex items-center justify-center text-4xl shadow-xl shadow-amber-500/40 border-4 border-white">
+              {celebration.badgeIcon || celebration.stamp?.symbol || (isLocationUnlock ? "🗺️" : "🏆")}
+            </div>
           </div>
         </div>
 

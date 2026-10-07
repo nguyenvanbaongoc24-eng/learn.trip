@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useGame } from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   Quest,
   Question,
@@ -52,18 +53,13 @@ import {
 import { CmsUsersView } from "./CmsUsersView";
 import { CmsAuditLogsView } from "./CmsAuditLogsView";
 import { CmsSessionsView } from "./CmsSessionsView";
-
-type CmsTab =
-  | "explorer"
-  | "create"
-  | "media"
-  | "ai_studio"
-  | "review"
-  | "versions"
-  | "analytics"
-  | "users"
-  | "audit"
-  | "sessions";
+import {
+  CmsSidebar,
+  CmsTopBar,
+  CmsMobileNav,
+  CmsCommandPalette,
+  CmsTab,
+} from "./CmsNav";
 
 interface CmsDashboardProps {
   onBackToGame: () => void;
@@ -87,7 +83,10 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
   } = useGame();
 
   const [activeTab, setActiveTab] = useState<CmsTab>("explorer");
-  const [currentRole, setCurrentRole] = useState<UserRole>("admin");
+  const { user } = useAuth();
+  const currentRole = (user?.role as UserRole) || "admin";
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [hasDirtyDraft, setHasDirtyDraft] = useState(false);
   const [notification, setNotification] = useState<{
     text: string;
@@ -176,105 +175,27 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
     (item) => item.quest.status === "approved"
   ).length;
 
-  const tabs = [
-    { id: "explorer", label: "Cấu trúc nội dung", shortLabel: "Nội dung", icon: Layers },
-    { id: "create", label: "Tạo Quest mới", shortLabel: "Tạo mới", icon: PlusCircle },
-    { id: "media", label: "Thư viện Media", shortLabel: "Media", icon: ImageIcon },
-    { id: "ai_studio", label: "AI Content Studio", shortLabel: "AI Studio", icon: Bot },
-    {
-      id: "review",
-      label: `Hàng đợi duyệt (${reviewQueue.length})`,
-      shortLabel: `Duyệt (${reviewQueue.length})`,
-      icon: FileCheck,
-    },
-    { id: "versions", label: "Phiên bản & Xuất bản", shortLabel: "Xuất bản", icon: History },
-    { id: "analytics", label: "Analytics & I/O", shortLabel: "Analytics", icon: BarChart3 },
-    { id: "users", label: "Người dùng & Roles", shortLabel: "Users", icon: Users },
-    { id: "audit", label: "Nhật ký kiểm duyệt", shortLabel: "Nhật ký", icon: ShieldAlert },
-    { id: "sessions", label: "Phiên & Bảo mật", shortLabel: "Bảo mật", icon: Key },
-  ];
-
   return (
-    <div className="min-h-[100dvh] bg-slate-900 text-slate-100 flex flex-col pb-20 sm:pb-6">
-      {/* Top CMS Header */}
-      <header className="bg-slate-950 border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button
-            type="button"
-            onClick={onBackToGame}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs transition-colors cursor-pointer min-h-[44px]"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Về Game Player</span>
-            <span className="sm:hidden">Game</span>
-          </button>
+    <div className="min-h-[100dvh] bg-slate-900 text-slate-100 flex flex-col pb-20 md:pb-6">
+      {/* Desktop Collapsible Sidebar */}
+      <CmsSidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        reviewCount={reviewQueue.length}
+        currentVersionNumber={currentVersionNumber}
+        onBackToGame={onBackToGame}
+        sidebarCollapsed={sidebarCollapsed}
+        setSidebarCollapsed={setSidebarCollapsed}
+      />
 
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <Layers className="w-5 h-5" />
-            </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-black text-base sm:text-lg text-white">
-                  Learn.Trip <span className="text-amber-400">CMS</span>
-                </h1>
-                <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase">
-                  v{currentVersionNumber}.0
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 hidden md:block">
-                Hệ thống Quản trị & Xuất bản nội dung bài học độc lập
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Desktop / Tablet CMS Action Tabs */}
-        <div className="hidden sm:flex items-center gap-1 bg-slate-900 p-1 rounded-2xl border border-slate-800">
-          {tabs.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveTab(item.id as CmsTab)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer min-h-[40px] ${
-                  isActive
-                    ? "bg-amber-500 text-slate-950 font-black shadow-md"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Role Switcher */}
-        <div className="hidden sm:flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 ml-2">
-          {([
-            { role: "admin" as UserRole, label: "Admin", Icon: ShieldCheck },
-            { role: "reviewer" as UserRole, label: "Reviewer", Icon: UserCheck },
-            { role: "creator" as UserRole, label: "Creator", Icon: User },
-          ]).map(({ role, label, Icon }) => (
-            <button
-              key={role}
-              type="button"
-              onClick={() => setCurrentRole(role)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
-                currentRole === role
-                  ? "bg-amber-500 text-slate-950 shadow"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      </header>
+      {/* Top CMS Header Bar */}
+      <CmsTopBar
+        activeTab={activeTab}
+        sidebarCollapsed={sidebarCollapsed}
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        onBackToGame={onBackToGame}
+        reviewCount={reviewQueue.length}
+      />
 
       {/* Notifications */}
       {notification && (
@@ -297,7 +218,11 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
       )}
 
       {/* CMS Body */}
-      <div className="flex-1 p-3 sm:p-6 max-w-7xl mx-auto w-full">
+      <main
+        className={`flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto transition-all duration-300 ${
+          sidebarCollapsed ? "md:ml-18" : "md:ml-64"
+        }`}
+      >
         {activeTab === "explorer" && (
           <ContentExplorerView
             allLocations={allLocations}
@@ -385,7 +310,7 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
         {activeTab === "sessions" && (
           <CmsSessionsView showNotify={showNotify} />
         )}
-      </div>
+      </main>
 
       {/* Inactivity Security Warning Modal */}
       {isIdleWarning && (
@@ -424,27 +349,20 @@ export function CmsDashboard({ onBackToGame }: CmsDashboardProps) {
       )}
 
       {/* Mobile Fixed Bottom Navigation Tab Bar */}
-      <nav aria-label="Mobile Navigation" className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-2 py-1.5 flex justify-around items-center min-h-[60px]">
-        {tabs.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveTab(item.id as CmsTab)}
-              className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl text-[10px] font-bold transition-all min-h-[48px] min-w-[56px] cursor-pointer ${
-                isActive
-                  ? "text-amber-400 font-black"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Icon className={`w-5 h-5 mb-0.5 ${isActive ? "text-amber-400 scale-110" : ""}`} />
-              <span>{item.shortLabel}</span>
-            </button>
-          );
-        })}
-      </nav>
+      <CmsMobileNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        reviewCount={reviewQueue.length}
+        onBackToGame={onBackToGame}
+      />
+
+      {/* Quick Command Palette (Ctrl+K) */}
+      <CmsCommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onSelectTab={(tab) => setActiveTab(tab)}
+        reviewCount={reviewQueue.length}
+      />
     </div>
   );
 }
