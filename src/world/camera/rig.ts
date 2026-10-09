@@ -224,7 +224,7 @@ export class CameraRig {
     const up = player.dir;
 
     if (this.transitioning && this.transitionT > 0.01) {
-      this.transitionT *= Math.exp(-dt * 7.0);
+      this.transitionT *= Math.exp(-dt * 2.8);
     } else {
       this.transitioning = false;
       this.transitionT = 0;
@@ -288,8 +288,9 @@ export class CameraRig {
 
     // Frame-rate independent damping without jitter
     if (this.transitioning) {
-      this.camera.position.lerpVectors(this.prevPos, desired, 1 - this.transitionT);
-      this.smoothUp.lerp(up, 1 - Math.exp(-dt * 5)).normalize();
+      const ease = 1 - Math.pow(this.transitionT, 2.2);
+      this.camera.position.lerpVectors(this.prevPos, desired, ease);
+      this.smoothUp.lerp(up, 1 - Math.exp(-dt * 4.5)).normalize();
       this.camera.up.copy(this.smoothUp);
     } else {
       this.camera.position.lerp(desired, 1 - Math.exp(-dt * 10.0));

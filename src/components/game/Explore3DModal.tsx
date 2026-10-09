@@ -179,7 +179,7 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
       {/* Grain + Vignette Overlay (matching daokyuc.vercel.app) */}
       <div className="fixed inset-0 pointer-events-none z-[999]" style={{
         background: `radial-gradient(ellipse at center, transparent 55%, rgba(20, 50, 52, 0.22) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.2 0 0 0 0 0.2 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        opacity: 0.12,
+        opacity: 0.22,
       }} />
 
       {/* 3D World Container with CSS Gradient */}

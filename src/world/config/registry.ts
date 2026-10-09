@@ -141,7 +141,7 @@ export const sapa: DestinationDef = {
     water: 0x5aafb8, sand: 0xb8a070, rock: 0x8a8580,
     leaf: [0x2d7834, 0x4a9a42, 0x68b050, 0x1f5c28], trunk: 0x4a3020,
   },
-  sky: { top: '#4a6d8c', bottom: '#b0c4de', fog: '#a9b8c6', fogDensity: 0.025 },
+  sky: { top: '#489da5', bottom: '#b6e4dc', fog: '#92d2c8', fogDensity: 0.010 },
   terrain: { amp: 3, freq: 2, type: 'mountains' },
   waters: [],
   paths: [

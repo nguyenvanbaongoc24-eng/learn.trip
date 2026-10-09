@@ -129,11 +129,11 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
 
   const camera = new THREE.PerspectiveCamera(CAM.overview.fov, width / height, 0.1, 300);
 
-  // ── Ánh sáng anime ấm áp & bóng nhuộm xanh ngọc (theo Sado) ──
-  const hemi = new THREE.HemisphereLight(0x8cc4d8, 0x62804c, 1.15);
+  // ── Ánh sáng anime ấm áp & bóng nhuộm xanh ngọc (theo Sado / Đảo Ký Ức) ──
+  const hemi = new THREE.HemisphereLight(0xcfeee8, 0x6a9a4a, 1.2);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight(0xffeed4, 2.3);
+  const sun = new THREE.DirectionalLight(0xffeed4, 2.4);
   sun.castShadow = true;
   const shadowResolution = isMobile ? 1024 : 2048;
   sun.shadow.mapSize.set(shadowResolution, shadowResolution);
@@ -147,8 +147,8 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
   scene.add(sun);
   scene.add(sun.target);
 
-  // Rim light ấm tạo viền sáng ven cho nhân vật & công trình
-  const rim = new THREE.DirectionalLight(0xffe2c4, 0.55);
+  // Rim light ấm tạo viền sáng ven vàng nhạt cho cây cối & nhân vật (daokyuc reference)
+  const rim = new THREE.DirectionalLight(0xffe2c4, 0.7);
   rim.position.set(-20, -10, -15);
   scene.add(rim);
 
@@ -365,11 +365,18 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
   renderer.domElement.addEventListener('pointercancel', onGlobePointerUp);
   renderer.domElement.addEventListener('wheel', onGlobeWheel, { passive: false });
 
-  // ── Shader warm-up (mục 4.2#2): compile + render 2 khung ẩn ──
+  // ── Shader warm-up (mục 4.2#2): compile + render 2 khung ẩn với toàn bộ mesh để không giật ──
+  crowd.group.visible = true;
+  if (poles) poles.visible = true;
+  poiManager.landmarks.visible = true;
+  character.mesh.visible = true;
   renderer.compile(scene, camera);
   renderer.render(scene, camera);
   renderer.shadowMap.needsUpdate = true;
   renderer.render(scene, camera);
+  // Khôi phục hiển thị ban đầu của overview
+  crowd.group.visible = false;
+  if (poles) poles.visible = false;
 
   let isDisposed = false;
   let isPaused = false;
@@ -382,15 +389,12 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
   let currentMode: 'walk' | 'overview' = 'overview';
 
   // Shadow texel snapping state (mục 4.2#8)
-  // Re-rendering a large shadow map while walking was the primary source of
-  // hitching. A 1024 map refreshed after a meaningful move stays crisp enough
-  // for this miniature scale while avoiding a shadow pass every few frames.
-  const shadowUpdateDistance = 0.35;
+  // Chỉ cập nhật bóng khi di chuyển qua bước texel lớn (2.2u) hoặc khi dừng lại, giữ vững 60fps mượt mà
+  const shadowUpdateDistance = 2.2;
 
   // ── Adaptive DPR (mục 4.4) ──
-  // Retina canvas labels remain crisp at 1.25 while this avoids a costly 2x render target on integrated GPUs.
-  const maxDPR = 1;
-  let currentDPR = maxDPR;
+  const maxDPR = isMobile ? 1.35 : Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.75);
+  let currentDPR = isMobile ? 1.25 : Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5);
   let frameTimes: number[] = [];
   let perfSamples: number[] = [];
   let lastPerfReport = performance.now();
@@ -520,10 +524,10 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
         const newSunPos = _headPos.copy(controller.pos).addScaledVector(_sunDir, 45);
         const moveDist = newSunPos.distanceTo(sun.position);
         
-        // Snap to texel grid to prevent shadow "swimming" (mục 4.2#8)
-        if (moveDist > shadowUpdateDistance) {
+        // Snap to texel grid to prevent shadow "swimming" and eliminate micro-stutters
+        const shouldUpdateShadow = moveDist > shadowUpdateDistance || (!controller.moving && moveDist > 0.45 && !renderer.shadowMap.needsUpdate);
+        if (shouldUpdateShadow) {
           sun.position.copy(newSunPos);
-          // Snap target
           sun.target.position.copy(controller.pos);
           sun.target.updateMatrixWorld();
           renderer.shadowMap.needsUpdate = true;

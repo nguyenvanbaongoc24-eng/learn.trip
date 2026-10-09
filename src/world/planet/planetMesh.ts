@@ -121,6 +121,12 @@ export function createPlanetMesh(): THREE.Mesh {
           diffuseColor.rgb *= 1.0 - blotch * 0.06 * land;
           float specks = smoothstep(0.84, 0.88, tnoise(vTP * 12.0));
           diffuseColor.rgb += specks * 0.04 * land;
+
+          // Bọt sóng ven bờ: dải trắng lăn tăn chạy theo nhịp sóng (daokyuc reference)
+          float wave = sin(uTime * 1.4 + n1 * 8.5) * 0.045;
+          float foam = smoothstep(-0.20 + wave, -0.06 + wave, h) * (1.0 - smoothstep(0.04 + wave, 0.14 + wave, h));
+          foam *= smoothstep(0.30, 0.55, n2 + 0.25);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.96, 0.99, 0.96), foam * 0.88);
         }`
       );
   };
