@@ -413,7 +413,6 @@ export const DESTINATIONS: Record<string, DestinationDef> = {
 };
 
 export function getDestination(id: string): DestinationDef {
-  const d = DESTINATIONS[id];
-  if (!d) throw new Error(`Unknown destination "${id}"`);
+  const d = DESTINATIONS[id] || DESTINATIONS['loc-' + id] || hanoi;
   return d;
 }

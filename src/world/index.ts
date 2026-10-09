@@ -93,9 +93,18 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
 
   const width = opts.container.clientWidth;
   const height = opts.container.clientHeight;
+  const isMobile =
+    typeof window !== 'undefined' &&
+    ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2));
+  const renderer = new THREE.WebGLRenderer({
+    antialias: !isMobile, // On high-DPI mobile screens, disable MSAA to save 40% fillrate while keeping crisp image
+    alpha: true,
+    powerPreference: 'high-performance',
+  });
+  // Cap mobile pixel ratio to 1.35 to prevent severe thermal throttling & 20fps drops on mobile GPUs
+  const maxDeviceDpr = isMobile ? 1.35 : 1.75;
+  renderer.setPixelRatio(Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, maxDeviceDpr));
   renderer.setSize(width, height);
   renderer.setClearColor(new THREE.Color(dest.sky.top), 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -105,6 +114,7 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true; // render shadow lần đầu
+  renderer.domElement.style.touchAction = 'none'; // Ensure instant touch response with 0ms browser gesture delay
 
   opts.container.appendChild(renderer.domElement);
 
@@ -125,7 +135,8 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
 
   const sun = new THREE.DirectionalLight(0xffeed4, 2.3);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  const shadowResolution = isMobile ? 1024 : 2048;
+  sun.shadow.mapSize.set(shadowResolution, shadowResolution);
   const S = 14;
   Object.assign(sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S, near: 1, far: 90 });
   sun.shadow.bias = -0.0003;
@@ -171,7 +182,9 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
         if (!mesh.isInstancedMesh) return;
         const fullCount = scatterCounts[groupIndex][childIndex++] || 0;
         // In overview, reduce dense grass/flowers count slightly for silky 60fps globe rotation
-        const mult = mode === 'walk' ? 1.0 : (groupIndex >= 9 ? 0.2 : 0.85);
+        // On mobile, trim grass instances (groupIndex >= 9) to prevent fillrate bottleneck
+        const mobileFactor = isMobile ? 0.7 : 1.0;
+        const mult = (mode === 'walk' ? 1.0 : (groupIndex >= 9 ? 0.2 : 0.85)) * mobileFactor;
         mesh.count = Math.round(fullCount * mult);
       });
       group.visible = true;

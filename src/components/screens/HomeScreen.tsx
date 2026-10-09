@@ -185,7 +185,14 @@ export function HomeScreen({ onNavigateTab, onOpenLocation, onOpen3D }: HomeScre
         {/* Explore Map */}
         <button
           type="button"
-          onClick={() => onNavigateTab("map")}
+          onClick={() => {
+            const el = document.getElementById("expedition-map");
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth" });
+            } else {
+              onNavigateTab("map");
+            }
+          }}
           className="p-6 bg-white hover:bg-emerald-50/50 border-2 border-slate-200 hover:border-emerald-400 rounded-3xl text-left transition-all group shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between"
         >
           <div className="space-y-3">
