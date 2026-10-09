@@ -153,6 +153,7 @@ export function HomeScreen({ onNavigateTab, onOpenLocation, onOpen3D }: HomeScre
             </div>
 
             <button
+              id="continue-journey-btn"
               type="button"
               onClick={() => onOpenLocation(currentLocation)}
               className="py-4 px-8 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black text-base rounded-2xl shadow-xl shadow-orange-500/40 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer border border-white/20"

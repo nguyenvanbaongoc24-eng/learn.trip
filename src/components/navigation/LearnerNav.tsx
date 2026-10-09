@@ -93,7 +93,13 @@ export function LearnerSidebar({ activeTab, setActiveTab, onOpenAuth, onOpenSett
       </button>
 
       {/* Navigation tabs */}
-      <nav className="flex-1 py-3 px-3 space-y-1" role="navigation" aria-label="Main navigation">
+      <nav
+        id="main-navigation-tabs"
+        data-nav-tabs="true"
+        className="flex-1 py-3 px-3 space-y-1"
+        role="navigation"
+        aria-label="Main navigation"
+      >
         {tabDefs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -427,6 +433,8 @@ export function LearnerBottomTabs({ activeTab, setActiveTab }: { activeTab: Lear
 
   return (
     <nav
+      id="main-navigation-tabs-mobile"
+      data-nav-tabs="true"
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/60 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
       role="navigation"
       aria-label="Tab navigation"

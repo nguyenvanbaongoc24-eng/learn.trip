@@ -31,6 +31,8 @@ import {
 import { sounds } from "@/utils/soundEffects";
 import { TermsPrivacyModal } from "../auth/TermsPrivacyModal";
 import { ParentalGateModal } from "@/components/ui/ParentalGateModal";
+import { useMentor } from "@/context/MentorContext";
+import { MascotCharacter } from "@/components/mascot/MascotCharacter";
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -42,6 +44,15 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   const [soundOn, setSoundOn] = useState(sounds.isEnabled());
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+  // Mentor controls
+  const {
+    mode: mentorMode,
+    setMode: setMentorMode,
+    voiceEnabled: mentorVoice,
+    toggleVoice: toggleMentorVoice,
+    resetMentorOnboarding,
+  } = useMentor();
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -282,6 +293,138 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               }`}
             />
           </div>
+        </button>
+      </div>
+
+      {/* Mentor & Guidance Section (Kim Quy) */}
+      <div className="bg-white border-2 border-slate-200 rounded-3xl overflow-hidden shadow-2xs">
+        <div className="px-5 py-3 bg-amber-50/80 border-b border-amber-200/60 flex items-center justify-between">
+          <h2 className="text-sm font-black text-amber-900 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-600" />
+            {locale === "vi" ? "Trợ lý học tập (Rùa Vàng Kim Quy)" : "Learning Assistant (Kim Quy)"}
+          </h2>
+          <div className="w-7 h-7 flex items-center justify-center">
+            <MascotCharacter mood="happy" size={28} />
+          </div>
+        </div>
+
+        {/* Guided vs Light Mode */}
+        <div className="px-5 py-4 border-b border-slate-100">
+          <div className="text-sm font-bold text-slate-800 mb-1">
+            {locale === "vi" ? "Chế độ hướng dẫn" : "Guidance Mode"}
+          </div>
+          <p className="text-[11px] text-slate-500 mb-3">
+            {locale === "vi"
+              ? "Dẫn đường phù hợp cho học sinh Tiểu học; Gợi ý nhẹ phù hợp cho THCS"
+              : "Guided mode is best for primary students; Light hints for secondary students"}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={() => setMentorMode("guided")}
+              className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                mentorMode === "guided"
+                  ? "border-emerald-500 bg-emerald-50/80 text-emerald-950 font-bold shadow-xs"
+                  : "border-slate-200 hover:border-slate-300 text-slate-600"
+              }`}
+            >
+              <div className="text-xs font-black flex items-center gap-1.5">
+                <span>🎒</span>
+                <span>{locale === "vi" ? "Dẫn đường" : "Guided"}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1">
+                {locale === "vi" ? "Từng bước, đọc to (Lớp 1-5)" : "Step-by-step, voice on"}
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMentorMode("light")}
+              className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                mentorMode === "light"
+                  ? "border-sky-500 bg-sky-50/80 text-sky-950 font-bold shadow-xs"
+                  : "border-slate-200 hover:border-slate-300 text-slate-600"
+              }`}
+            >
+              <div className="text-xs font-black flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>{locale === "vi" ? "Gợi ý nhẹ" : "Light Hints"}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1">
+                {locale === "vi" ? "Tự do, gợi ý nhanh (Lớp 6-9)" : "Quick hints, skippable"}
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Voice Toggle */}
+        <button
+          type="button"
+          onClick={toggleMentorVoice}
+          className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100"
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                mentorVoice ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400"
+              }`}
+            >
+              {mentorVoice ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-bold text-slate-800">
+                {locale === "vi" ? "Giọng đọc của Rùa Vàng" : "Kim Quy Voice Audio"}
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {locale === "vi"
+                  ? mentorVoice
+                    ? "Đang bật (tự động phát âm lời thoại)"
+                    : "Đã tắt"
+                  : mentorVoice
+                  ? "Voice enabled"
+                  : "Voice disabled"}
+              </div>
+            </div>
+          </div>
+          <div
+            className={`w-12 h-7 rounded-full relative transition-colors ${
+              mentorVoice ? "bg-amber-500" : "bg-slate-300"
+            }`}
+          >
+            <div
+              className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${
+                mentorVoice ? "left-6" : "left-1"
+              }`}
+            />
+          </div>
+        </button>
+
+        {/* Replay Onboarding / Tour Button */}
+        <button
+          type="button"
+          onClick={() => {
+            resetMentorOnboarding();
+            onBack();
+          }}
+          className="w-full px-5 py-4 flex items-center justify-between hover:bg-amber-50/50 transition-colors cursor-pointer text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-slate-800">
+                {locale === "vi" ? "Xem lại hướng dẫn mở đầu" : "Replay Tour Tutorial"}
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {locale === "vi"
+                  ? "Rùa Vàng sẽ giới thiệu lại các bước làm quen với thế giới"
+                  : "Meet Kim Quy and review tour again"}
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-slate-400" />
         </button>
       </div>
 

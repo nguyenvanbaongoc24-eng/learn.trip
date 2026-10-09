@@ -24,6 +24,8 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { OnboardingModal } from "@/components/auth/OnboardingModal";
 import { Location, Quest } from "@/types/content";
 import { motionVariants } from "@/lib/design/tokens";
+import { MentorTour } from "@/components/mentor/MentorTour";
+import { MentorFabButton } from "@/components/mentor/MentorFabButton";
 
 // Dynamic import for 3D component (no SSR - Three.js needs browser)
 const Explore3DModal = dynamic(
@@ -262,6 +264,12 @@ export default function LearnerHomePage() {
         onComplete={handleOnboardingComplete}
         displayName={user?.displayName || "Bạn"}
       />
+
+      {/* Mentor Guidance Tour & Spotlight Engine */}
+      <MentorTour />
+
+      {/* Floating In-App Mentor Help Button */}
+      <MentorFabButton activeTab={activeTab} />
     </div>
   );
 }
