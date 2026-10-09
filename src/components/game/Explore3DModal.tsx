@@ -29,6 +29,7 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
   const [worldError, setWorldError] = useState<string | null>(null);
   const [journalOpen, setJournalOpen] = useState(false);
   const [walkHintVisible, setWalkHintVisible] = useState(true);
+  const [stageTitleVisible, setStageTitleVisible] = useState(false);
   const [perfStats, setPerfStats] = useState<WorldPerf | null>(null);
   const [showPerf, setShowPerf] = useState(false);
   const globeLabelRefs = useRef(new Map<string, HTMLButtonElement>());
@@ -155,6 +156,17 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
     const timer = setTimeout(() => setWalkHintVisible(false), 8000);
     return () => clearTimeout(timer);
   }, [viewMode, walkHintVisible]);
+
+  // Stage title auto-fade after 4.5 seconds (mục 4#8)
+  useEffect(() => {
+    if (viewMode === 'walk' && currentStage) {
+      setStageTitleVisible(true);
+      const timer = setTimeout(() => setStageTitleVisible(false), 4500);
+      return () => clearTimeout(timer);
+    } else {
+      setStageTitleVisible(false);
+    }
+  }, [viewMode, currentStage?.id]);
 
   const closePoiPanel = () => {
     setPhotoPoiId(null);
@@ -291,18 +303,21 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
             </button>
           ))}
 
-          {/* Place Title (Bottom Left) */}
-          <div className="pointer-events-none px-6 pb-2">
+          {/* Place Title (Bottom Left — tự mờ sau 4.5s như daokyuc) */}
+          <div
+            className="pointer-events-none px-6 pb-2 transition-opacity duration-1000"
+            style={{ opacity: stageTitleVisible ? 1 : 0 }}
+          >
             {viewMode === "walk" && currentStage && (
               <div className="mb-2 max-w-[calc(100vw-3rem)] sm:max-w-[60vw]">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#f8f3ea] leading-tight break-words" style={{ 
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#f8f3ea] leading-tight break-words" style={{ 
                   textShadow: '0 4px 8px rgba(29,53,56,0.6), 0 2px 4px rgba(29,53,56,0.4)',
-                  WebkitTextStroke: '2px #1d3538' 
+                  WebkitTextStroke: '1.5px #1d3538' 
                 }}>
                   {currentStage.name.vi}
                 </h1>
                 {currentStage.subtitle.vi.toLowerCase() !== currentStage.name.vi.toLowerCase() && (
-                  <p className="text-xl md:text-2xl font-bold text-[#f8f3ea] mt-1" style={{ 
+                  <p className="text-sm md:text-base font-bold text-[#f8f3ea] mt-1" style={{ 
                     textShadow: '0 2px 4px rgba(29,53,56,0.5)',
                     WebkitTextStroke: '0.5px #1d3538' 
                   }}>

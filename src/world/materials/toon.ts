@@ -50,8 +50,9 @@ const occShaderChunk = `
     vec3 ap = vOccWorld - uCamPos;
     float t = dot(ap, dir);
     float dperp = length(ap - dir * t);
-    float inside = step(0.0, t) * (1.0 - smoothstep(L - 1.6, L - 0.9, t)) * (1.0 - smoothstep(0.9, 2.0, dperp));
-    float nearCam = 1.0 - smoothstep(1.4, 3.2, length(ap));
+    float inside = step(0.0, t) * (1.0 - smoothstep(L - 1.6, L - 0.9, t)) * (1.0 - smoothstep(0.6, 1.4, dperp));
+    // nearCam chỉ kích hoạt khi vật thể đâm sát sạt ống kính camera (<0.9u), không làm tan biến công trình lớn
+    float nearCam = 1.0 - smoothstep(0.35, 0.9, length(ap));
     float fade = max(inside * 0.85, nearCam) * uOcclude;
     if (fade > occBayer(gl_FragCoord.xy)) discard;
   }

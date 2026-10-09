@@ -104,30 +104,36 @@ export function createFlamboyantGeo(): THREE.BufferGeometry {
   return merged;
 }
 
-// ── Purple Lagerstroemia Tree (Bằng Lăng Tím Hà Nội) ──
+// ── Golden Shower / Autumn Foliage Tree (Cây Điệp Vàng / Bàng Lá Nhỏ) ──
 export function createLagerstroemiaGeo(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
   const trunkColor = 0x4e3828;
-  const purpPal = [0x9b51e0, 0xb866e9, 0x833bc4, 0xca82f8];
+  // Bảng màu vàng mật ong - hổ phách hữu cơ dịu mắt (thay cho tím dạ quang)
+  const goldPal = [0xd4a034, 0xebb442, 0xbe8c28, 0xf0c458];
 
-  const t1 = applyColor(new THREE.CylinderGeometry(0.11, 0.18, 1.3, 6).translate(0, 0.65, 0), trunkColor);
+  const t1 = applyColor(new THREE.CylinderGeometry(0.11, 0.18, 1.4, 6).translate(0, 0.7, 0), trunkColor);
   parts.push(t1);
 
-  const c1Geo = new THREE.SphereGeometry(0.78, 8, 6);
+  // Tán lá dạng đĩa dẹt nhiều tầng đan xen tự nhiên (như phong cách Sado)
+  const c1Geo = new THREE.SphereGeometry(0.85, 8, 6);
+  c1Geo.scale(1.35, 0.55, 1.25);
   c1Geo.translate(0, 1.7, 0);
-  parts.push(applyColor(c1Geo, purpPal[0]));
+  parts.push(applyColor(c1Geo, goldPal[0]));
 
-  const c2Geo = new THREE.SphereGeometry(0.6, 8, 6);
-  c2Geo.translate(0.48, 1.5, 0.2);
-  parts.push(applyColor(c2Geo, purpPal[1]));
+  const c2Geo = new THREE.SphereGeometry(0.65, 8, 6);
+  c2Geo.scale(1.25, 0.5, 1.15);
+  c2Geo.translate(0.52, 1.55, 0.2);
+  parts.push(applyColor(c2Geo, goldPal[1]));
 
-  const c3Geo = new THREE.SphereGeometry(0.55, 8, 6);
-  c3Geo.translate(-0.45, 1.48, -0.2);
-  parts.push(applyColor(c3Geo, purpPal[2]));
+  const c3Geo = new THREE.SphereGeometry(0.6, 8, 6);
+  c3Geo.scale(1.2, 0.48, 1.1);
+  c3Geo.translate(-0.48, 1.5, -0.2);
+  parts.push(applyColor(c3Geo, goldPal[2]));
 
-  const c4Geo = new THREE.SphereGeometry(0.45, 8, 6);
-  c4Geo.translate(0.08, 2.05, 0.05);
-  parts.push(applyColor(c4Geo, purpPal[3]));
+  const c4Geo = new THREE.SphereGeometry(0.48, 8, 6);
+  c4Geo.scale(1.1, 0.45, 1.05);
+  c4Geo.translate(0.08, 2.15, 0.05);
+  parts.push(applyColor(c4Geo, goldPal[3]));
 
   const merged = mergeGeometries(parts);
   computeOutlineNormals(merged);

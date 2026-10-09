@@ -121,7 +121,7 @@ export const hanoi: DestinationDef = {
         { text: "Chùa Một Cột xây 1049, một cột đá cao khoảng 4 m, đường kính khoảng 1,2 m", source: "vinwonders.com" },
         { text: "Lăng cao 21,6 m, mỗi cạnh 30 m, ốp đá granite xám, hoàn thành 1975", source: "greensm.com" }
       ],
-      dir: [-22, -15], spawnOffset: { bearing: 0, dist: 7.5 }, flatR: 9.5, ground: 'paved', build: (ctx: any) => buildMotCot(ctx), photos: ['content/photos/hanoi/motcot.jpg'] 
+      dir: [-22, -15], spawnOffset: { bearing: 0, dist: 5.6 }, interactAt: { bearing: 0, dist: 3.6 }, flatR: 9.5, ground: 'paved', build: (ctx: any) => buildMotCot(ctx), photos: ['content/photos/hanoi/motcot.jpg'] 
     }
   ]
 };
