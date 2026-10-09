@@ -68,15 +68,7 @@ export function MentorDialogBubble({
         <div className="flex items-center gap-3">
           <div className="shrink-0 -mt-2 -ml-2">
             <MascotCharacter
-              mood={
-                mood === "pointing"
-                  ? "waving"
-                  : mood === "thinking"
-                  ? "happy"
-                  : mood === "sleeping"
-                  ? "happy"
-                  : mood
-              }
+              mood={mood}
               size={64}
             />
           </div>

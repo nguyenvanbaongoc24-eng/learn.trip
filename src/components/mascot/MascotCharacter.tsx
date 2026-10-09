@@ -4,7 +4,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { springs } from "@/lib/design/tokens";
 
-export type MascotMood = "happy" | "cheering" | "thinking" | "encouraging" | "waving";
+export type MascotMood =
+  | "happy"
+  | "cheering"
+  | "thinking"
+  | "encouraging"
+  | "waving"
+  | "comforting"
+  | "pointing"
+  | "sleeping";
 
 interface MascotCharacterProps {
   mood?: MascotMood;
@@ -53,6 +61,21 @@ export function MascotCharacter({
       rotate: [0, 3, -2, 0],
       transition: { repeat: Infinity, duration: 1.8, ease: "easeInOut" as const },
     },
+    comforting: {
+      y: [0, -2, 0],
+      rotate: [0, -2, 2, 0],
+      transition: { repeat: Infinity, duration: 2.2, ease: "easeInOut" as const },
+    },
+    pointing: {
+      y: [0, -4, 0],
+      rotate: [0, 3, 0],
+      transition: { repeat: Infinity, duration: 1.6, ease: "easeInOut" as const },
+    },
+    sleeping: {
+      y: [0, 3, 0],
+      rotate: [0, 5, 0],
+      transition: { repeat: Infinity, duration: 3.5, ease: "easeInOut" as const },
+    },
   }[mood];
 
   const leftHand = {
@@ -70,6 +93,12 @@ export function MascotCharacter({
     },
     happy: { rotate: 0 },
     encouraging: { rotate: -10 },
+    comforting: {
+      rotate: [-10, -25, -10],
+      transition: { repeat: Infinity, duration: 1.8 },
+    },
+    pointing: { rotate: -5 },
+    sleeping: { rotate: 12 },
   }[mood];
 
   const rightHand = {
@@ -81,10 +110,31 @@ export function MascotCharacter({
     thinking: { rotate: 0 },
     encouraging: { rotate: 10 },
     waving: { rotate: 0 },
+    comforting: {
+      rotate: [10, 25, 10],
+      transition: { repeat: Infinity, duration: 1.8 },
+    },
+    pointing: {
+      rotate: [30, 60, 30],
+      transition: { repeat: Infinity, duration: 1.2 },
+    },
+    sleeping: { rotate: -12 },
   }[mood];
 
   return (
     <div className={`relative inline-flex flex-col items-center ${className}`}>
+      {/* Sleeping 'z Z Z' floating indicators */}
+      {mood === "sleeping" && (
+        <motion.div
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: [0, 1, 0], y: [-5, -22], x: [0, 6] }}
+          transition={{ repeat: Infinity, duration: 2.2, ease: "easeOut" }}
+          className="absolute -top-3 -right-2 text-sky-400 font-black text-sm pointer-events-none select-none"
+        >
+          z Z Z
+        </motion.div>
+      )}
+
       {/* Speech Bubble */}
       {speechText && (
         <motion.div
@@ -162,8 +212,14 @@ export function MascotCharacter({
             <path d="M 48 42 Q 52 36 56 42" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" fill="none" />
             <path d="M 64 42 Q 68 36 72 42" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" fill="none" />
           </>
-        ) : mood === "encouraging" ? (
-          // Sweet gentle eyes
+        ) : mood === "sleeping" ? (
+          // Sleeping peaceful closed slits
+          <>
+            <path d="M 47 43 Q 51 47 55 43" stroke="#1E293B" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+            <path d="M 65 43 Q 69 47 73 43" stroke="#1E293B" strokeWidth="2.8" strokeLinecap="round" fill="none" />
+          </>
+        ) : mood === "comforting" || mood === "encouraging" ? (
+          // Sweet gentle comforting eyes
           <>
             <circle cx="51" cy="42" r="4" fill="#1E293B" />
             <circle cx="52" cy="40.5" r="1.5" fill="#FFFFFF" />
@@ -183,7 +239,7 @@ export function MascotCharacter({
             <path d="M 47 34 Q 52 33 56 36" stroke="#92400E" strokeWidth="1.8" strokeLinecap="round" fill="none" />
           </>
         ) : (
-          // Standard big sparkling eyes
+          // Standard big sparkling eyes (happy / pointing / waving)
           <>
             <circle cx="51" cy="42" r="4.5" fill="#1E293B" />
             <circle cx="52.5" cy="40" r="1.8" fill="#FFFFFF" />
@@ -198,7 +254,10 @@ export function MascotCharacter({
         {mood === "cheering" ? (
           // Big joyful open mouth :D
           <path d="M 54 50 Q 60 59 66 50 Z" fill="#DC2626" stroke="#991B1B" strokeWidth="1.5" />
-        ) : mood === "encouraging" ? (
+        ) : mood === "sleeping" ? (
+          // Peaceful small smile
+          <path d="M 57 52 Q 60 55 63 52" stroke="#92400E" strokeWidth="2" strokeLinecap="round" fill="none" />
+        ) : mood === "comforting" || mood === "encouraging" ? (
           // Warm gentle smile :)
           <path d="M 55 52 Q 60 56 65 52" stroke="#92400E" strokeWidth="2" strokeLinecap="round" fill="none" />
         ) : mood === "thinking" ? (

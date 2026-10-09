@@ -5,6 +5,66 @@ import { Question, LocalizedText } from "@/types/content";
 import { CheckCircle2, XCircle, Volume2, Sparkles, RotateCcw, VolumeX, Headphones, Play } from "lucide-react";
 import { sounds } from "@/utils/soundEffects";
 import { SquishButton } from "@/components/ui/SquishButton";
+import { MascotCharacter } from "@/components/mascot/MascotCharacter";
+
+interface QuestionFeedbackBubbleProps {
+  isCorrect: boolean;
+  explanation?: LocalizedText;
+  hintText?: string;
+  defaultCorrectTitle?: string;
+  defaultIncorrectTitle?: string;
+  locale: "vi" | "en";
+  t: (loc: LocalizedText) => string;
+}
+
+function QuestionFeedbackBubble({
+  isCorrect,
+  explanation,
+  hintText,
+  defaultCorrectTitle,
+  defaultIncorrectTitle,
+  locale,
+  t,
+}: QuestionFeedbackBubbleProps) {
+  if (isCorrect) {
+    return (
+      <div className="p-4 bg-emerald-50/95 border-2 border-emerald-300 rounded-3xl text-emerald-950 text-sm flex items-center gap-3.5 shadow-xs animate-scaleUp">
+        <div className="shrink-0 -my-1">
+          <MascotCharacter mood="cheering" size={54} />
+        </div>
+        <div className="flex-1">
+          <p className="font-black text-emerald-900 text-sm sm:text-base">
+            {defaultCorrectTitle || (locale === "vi" ? "Xuất sắc lắm bạn ơi! Đúng rồi 🎉" : "Awesome! That's correct 🎉")}
+          </p>
+          {explanation && (
+            <p className="text-emerald-800 text-xs sm:text-sm mt-0.5 font-medium leading-relaxed">
+              {t(explanation)}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 bg-amber-50/95 border-2 border-amber-300 rounded-3xl mb-4 text-slate-800 text-sm flex items-center gap-3.5 animate-shake shadow-xs">
+      <div className="shrink-0 -my-1">
+        <MascotCharacter mood="comforting" size={54} />
+      </div>
+      <div className="flex-1">
+        <p className="font-black text-amber-950 text-sm sm:text-base">
+          {defaultIncorrectTitle || (locale === "vi" ? "Đừng lo, sai không sao hết! 🐢" : "Don't worry, mistakes help us learn! 🐢")}
+        </p>
+        <p className="text-amber-800 text-xs sm:text-sm mt-0.5 font-medium leading-relaxed">
+          {hintText ||
+            (locale === "vi"
+              ? "Kim Quy gợi ý: Hãy quan sát kỹ gợi ý và phát âm để chọn đáp án đúng nhé!"
+              : "Kim Quy hint: Check the clue and sounds carefully!")}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 interface QuestionRendererProps {
   question: Question;
@@ -265,32 +325,28 @@ function MultipleChoiceView({
                 </div>
               </div>
             )}
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-sm flex items-start gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">
-                  {locale === "vi" ? "Tuyệt vời! Bạn trả lời đúng rồi 🎉" : "Awesome! That's correct 🎉"}
-                </p>
-                {question.explanation && (
-                  <p className="text-emerald-800 mt-0.5">{t(question.explanation)}</p>
-                )}
-              </div>
-            </div>
+            <QuestionFeedbackBubble
+              isCorrect={true}
+              explanation={question.explanation}
+              locale={locale}
+              t={t}
+            />
           </div>
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-shake">
-            <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold">
-                {locale === "vi" ? "Chưa chính xác rồi, đừng lo bạn thử lại nhé!" : "Not quite right yet, give it another shot!"}
-              </p>
-              <p className="text-rose-700 mt-0.5">
-                {locale === "vi" ? "Hãy đọc kỹ gợi ý phía trên." : "Take a close look at the clue above."}
-              </p>
-            </div>
-          </div>
+          <QuestionFeedbackBubble
+            isCorrect={false}
+            hintText={
+              question.hint
+                ? t(question.hint)
+                : locale === "vi"
+                ? "Kim Quy gợi ý: Đọc kỹ câu hỏi và các lựa chọn phía trên nhé!"
+                : "Kim Quy hint: Read the question and options above carefully!"
+            }
+            locale={locale}
+            t={t}
+          />
         )}
 
         <SquishButton
@@ -460,27 +516,30 @@ function PictureMatchView({
                 </div>
               </div>
             )}
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-sm flex items-start gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">
-                  {locale === "vi" ? "Đúng chuẩn rồi! 🎉" : "Spot on! That is right! 🎉"}
-                </p>
-                {question.explanation && (
-                  <p className="text-emerald-800 mt-0.5">{t(question.explanation)}</p>
-                )}
-              </div>
-            </div>
+            <QuestionFeedbackBubble
+              isCorrect={true}
+              defaultCorrectTitle={locale === "vi" ? "Đúng chuẩn rồi! Rất tinh mắt 🎉" : "Spot on! Great eye! 🎉"}
+              explanation={question.explanation}
+              locale={locale}
+              t={t}
+            />
           </div>
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-shake">
-            <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-            <p className="font-bold">
-              {locale === "vi" ? "Chưa đúng hình này, hãy chọn lại nhé!" : "Not this picture, try another one!"}
-            </p>
-          </div>
+          <QuestionFeedbackBubble
+            isCorrect={false}
+            defaultIncorrectTitle={locale === "vi" ? "Chưa đúng hình này rồi, thử lại nhé!" : "Not this picture, try another one!"}
+            hintText={
+              question.hint
+                ? t(question.hint)
+                : locale === "vi"
+                ? "Kim Quy gợi ý: Nhìn kỹ chi tiết đặc trưng trong hình ảnh nhé!"
+                : "Kim Quy hint: Look closely at the details in the pictures!"
+            }
+            locale={locale}
+            t={t}
+          />
         )}
 
         <SquishButton
@@ -738,42 +797,38 @@ function WordBuilderView({
                 </div>
               </div>
             )}
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-sm flex items-start gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">
-                  {locale === "vi" ? "Chính xác xuất sắc! 🎉" : "Brilliant! You got it right! 🎉"}
-                </p>
-                {question.explanation && (
-                  <p className="text-emerald-800 mt-0.5">{t(question.explanation)}</p>
-                )}
-              </div>
-            </div>
+            <QuestionFeedbackBubble
+              isCorrect={true}
+              defaultCorrectTitle={locale === "vi" ? "Chính xác xuất sắc! Ghép từ siêu quá 🎉" : "Brilliant! Word completed perfectly! 🎉"}
+              explanation={question.explanation}
+              locale={locale}
+              t={t}
+            />
           </div>
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start justify-between gap-2.5 animate-shake">
-            <div className="flex items-start gap-2.5">
-              <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">
-                  {locale === "vi" ? "Từ này chưa chính xác, hãy thử lại!" : "Not quite right yet, try again!"}
-                </p>
-                {config?.hintVi && (
-                  <p className="text-rose-700 text-xs mt-0.5">
-                    {locale === "vi" ? `Gợi ý: ${config.hintVi}` : `Hint: ${config.targetWord}`}
-                  </p>
-                )}
-              </div>
+          <div className="mb-4">
+            <QuestionFeedbackBubble
+              isCorrect={false}
+              defaultIncorrectTitle={locale === "vi" ? "Từ này chưa chính xác, đừng nản nhé!" : "Not quite right yet, try again!"}
+              hintText={
+                config?.hintVi
+                  ? (locale === "vi" ? `Gợi ý: ${config.hintVi}` : `Hint: ${config.targetWord}`)
+                  : undefined
+              }
+              locale={locale}
+              t={t}
+            />
+            <div className="flex justify-end -mt-2">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-4 py-2 bg-amber-600 text-white rounded-xl text-xs font-black hover:bg-amber-700 transition-colors cursor-pointer shadow-xs"
+              >
+                {locale === "vi" ? "↺ Xếp lại chữ cái" : "↺ Rearrange Letters"}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 cursor-pointer"
-            >
-              {locale === "vi" ? "Xếp lại" : "Rearrange"}
-            </button>
           </div>
         )}
 
@@ -987,29 +1042,30 @@ function ListenChooseView({
                 </div>
               </div>
             )}
-            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-sm flex items-start gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">
-                  {locale === "vi" ? "Khả năng nghe tuyệt vời! 🎉" : "Superb listening skills! 🎉"}
-                </p>
-                {question.explanation && (
-                  <p className="text-emerald-800 mt-0.5">{t(question.explanation)}</p>
-                )}
-              </div>
-            </div>
+            <QuestionFeedbackBubble
+              isCorrect={true}
+              defaultCorrectTitle={locale === "vi" ? "Khả năng nghe tuyệt vời! Bạn giỏi lắm 🎉" : "Superb listening skills! 🎉"}
+              explanation={question.explanation}
+              locale={locale}
+              t={t}
+            />
           </div>
         )}
 
         {isSubmitted && !isCorrect && (
-          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl mb-4 text-rose-900 text-sm flex items-start gap-2.5 animate-shake">
-            <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold">
-                {locale === "vi" ? "Chưa đúng rồi, hãy bấm nút nghe lại một lần nữa nhé!" : "Not quite right, tap the listen button to hear it again!"}
-              </p>
-            </div>
-          </div>
+          <QuestionFeedbackBubble
+            isCorrect={false}
+            defaultIncorrectTitle={locale === "vi" ? "Chưa đúng rồi, hãy bấm loa nghe lại nhé!" : "Not quite right, tap the listen button to hear it again!"}
+            hintText={
+              question.hint
+                ? t(question.hint)
+                : locale === "vi"
+                ? "Kim Quy gợi ý: Bấm vào biểu tượng loa để nghe thật chậm lại từng âm điệu nhé!"
+                : "Kim Quy hint: Tap the speaker icon to listen to each sound carefully!"
+            }
+            locale={locale}
+            t={t}
+          />
         )}
 
         <SquishButton

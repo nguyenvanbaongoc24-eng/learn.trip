@@ -68,10 +68,36 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [parentalGateOpen, setParentalGateOpen] = useState(false);
+  const [parentalGateTarget, setParentalGateTarget] = useState<"delete_account" | "kid_mode">("delete_account");
+  const [kidMode, setKidMode] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("learntrip_kid_mode") === "true";
+    }
+    return false;
+  });
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  const handleParentalGateSuccess = () => {
+    setParentalGateOpen(false);
+    if (parentalGateTarget === "delete_account") {
+      setDeleteConfirmText("");
+      setDeleteError("");
+      setDeleteModalOpen(true);
+    } else if (parentalGateTarget === "kid_mode") {
+      const next = !kidMode;
+      setKidMode(next);
+      localStorage.setItem("learntrip_kid_mode", String(next));
+      if (next) {
+        setMentorMode("guided");
+        sounds.playVictory();
+      } else {
+        sounds.playClick();
+      }
+    }
+  };
 
   const handleExportData = async () => {
     try {
@@ -395,6 +421,54 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             <div
               className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${
                 mentorVoice ? "left-6" : "left-1"
+              }`}
+            />
+          </div>
+        </button>
+
+        {/* Kid Safe Mode Toggle (Protected by Parental Gate) */}
+        <button
+          type="button"
+          onClick={() => {
+            setParentalGateTarget("kid_mode");
+            setParentalGateOpen(true);
+          }}
+          className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100"
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                kidMode ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"
+              }`}
+            >
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <span>{locale === "vi" ? "Chế độ An toàn cho Bé" : "Kid Safe Mode"}</span>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-black">
+                  {locale === "vi" ? "Cổng Phụ huynh" : "Parent Gate"}
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {locale === "vi"
+                  ? kidMode
+                    ? "Đang bật: Nhắc nghỉ ngơi 20 phút, cỡ chữ lớn, giảm áp lực xếp hạng"
+                    : "Chạm để kích hoạt bảo vệ riêng tư & trải nghiệm nhẹ nhàng cho trẻ nhỏ"
+                  : kidMode
+                  ? "Active: 20-min breaks, large font, relaxed leaderboard"
+                  : "Tap to enable child protection and relaxed pacing"}
+              </div>
+            </div>
+          </div>
+          <div
+            className={`w-12 h-7 rounded-full relative transition-colors ${
+              kidMode ? "bg-emerald-500" : "bg-slate-300"
+            }`}
+          >
+            <div
+              className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-1 transition-all ${
+                kidMode ? "left-6" : "left-1"
               }`}
             />
           </div>
@@ -740,18 +814,21 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         onClose={() => setTermsModalOpen(false)}
       />
 
-      {/* Parental Gate Modal before Delete Account */}
+      {/* Multi-Purpose Parental Gate Modal */}
       <ParentalGateModal
         isOpen={parentalGateOpen}
         onClose={() => setParentalGateOpen(false)}
-        title="Xác thực Phụ huynh"
-        description="Thao tác xóa tài khoản không thể phục hồi. Phụ huynh vui lòng xác thực phép tính:"
-        onSuccess={() => {
-          setParentalGateOpen(false);
-          setDeleteConfirmText("");
-          setDeleteError("");
-          setDeleteModalOpen(true);
-        }}
+        title={
+          parentalGateTarget === "delete_account"
+            ? "Xác thực Phụ huynh (Xóa dữ liệu)"
+            : "Cổng Phụ huynh (Chế độ Trẻ em)"
+        }
+        description={
+          parentalGateTarget === "delete_account"
+            ? "Thao tác xóa tài khoản không thể phục hồi. Phụ huynh vui lòng xác thực phép tính:"
+            : "Để đảm bảo an toàn cho bé, phụ huynh vui lòng hoàn thành phép tính bên dưới để bật/tắt Chế độ An toàn:"
+        }
+        onSuccess={handleParentalGateSuccess}
       />
 
       {/* Delete Account 2-Step Confirmation Modal */}

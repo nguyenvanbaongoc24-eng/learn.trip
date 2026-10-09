@@ -313,14 +313,26 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
             )}
           </div>
           
-          {/* "Xem ảnh [E]" Prompt (like reference site) */}
-          {canInteract && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-20 pointer-events-none">
-              <div className="bg-[#f8f3ea] text-[#1d3538] px-5 py-3 rounded-full font-bold border-[2.5px] border-[#1d3538] shadow-[3px_3px_0_#1d3538] flex items-center gap-2.5 animate-bounce">
-                 <Camera className="w-4 h-4" strokeWidth={2.5} />
-                 <span>Xem ảnh</span>
-                 <kbd className="bg-[#1d3538] text-[#f8f3ea] px-2 py-0.5 rounded-md font-black text-xs">E</kbd>
-              </div>
+          {/* "Xem ảnh [E]" Interactive Prompt (Mobile touch & Desktop click) */}
+          {canInteract && poiId && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-20 pointer-events-auto z-20">
+              <button
+                type="button"
+                onClick={() => {
+                  setPhotoPoiId(poiId);
+                  worldRef.current?.setPaused(true);
+                }}
+                className="bg-[#f8f3ea] hover:bg-white text-[#1d3538] px-5 py-3 rounded-full font-bold border-[2.5px] border-[#1d3538] shadow-[3px_3px_0_#1d3538] active:translate-y-[2px] active:shadow-[1px_1px_0_#1d3538] flex items-center gap-2.5 animate-bounce cursor-pointer transition-transform"
+              >
+                <Camera className="w-4 h-4 text-teal-700" strokeWidth={2.5} />
+                <span>Xem ảnh & Di tích</span>
+                <kbd className="hidden sm:inline-block bg-[#1d3538] text-[#f8f3ea] px-2 py-0.5 rounded-md font-black text-xs">
+                  E
+                </kbd>
+                <span className="sm:hidden bg-[#e8622c] text-white px-2 py-0.5 rounded-full font-black text-[10px]">
+                  Chạm
+                </span>
+              </button>
             </div>
           )}
 
@@ -394,8 +406,13 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
                 transition: 'opacity 1.5s ease-out',
                 pointerEvents: walkHintVisible ? 'auto' : 'none',
               }}>
-                <div className="bg-[#1d3538]/60 text-[#f8f3ea]/80 px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm">
-                  WASD / click để đi · Kéo chuột để xoay · Cuộn để thu phóng · Shift chạy · M bản đồ · E xem ảnh
+                <div className="bg-[#1d3538]/70 text-[#f8f3ea]/90 px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm shadow-sm text-center max-w-[90vw]">
+                  <span className="hidden sm:inline">
+                    WASD / click để đi · Kéo chuột để xoay · Cuộn để thu phóng · Shift chạy · M bản đồ · E xem ảnh
+                  </span>
+                  <span className="sm:hidden">
+                    Chạm mặt đất để di chuyển · Vuốt màn hình để xoay góc nhìn
+                  </span>
                 </div>
               </div>
             )}
