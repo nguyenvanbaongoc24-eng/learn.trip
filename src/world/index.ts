@@ -99,18 +99,18 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
     ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768);
 
   const renderer = new THREE.WebGLRenderer({
-    antialias: !isMobile, // On high-DPI mobile screens, disable MSAA to save 40% fillrate while keeping crisp image
+    antialias: true, // Crisp silhouettes and smooth outline geometry
     alpha: true,
     powerPreference: 'high-performance',
   });
-  // Cap mobile pixel ratio to 1.35 to prevent severe thermal throttling & 20fps drops on mobile GPUs
-  const maxDeviceDpr = isMobile ? 1.35 : 1.75;
+  // Sharp rendering: desktop up to 2.0 for Retina/4K, mobile up to 1.6 for crisp OLED screens
+  const maxDeviceDpr = isMobile ? 1.6 : 2.0;
   renderer.setPixelRatio(Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, maxDeviceDpr));
   renderer.setSize(width, height);
   renderer.setClearColor(new THREE.Color(dest.sky.top), 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 1.06;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;

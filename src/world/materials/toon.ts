@@ -164,12 +164,19 @@ export function getOutlineMaterial(
       uniform float uThickness;
       varying vec3 vOccWorld;
       void main() {
-        vec4 p = vec4(position + outlineNormal * uThickness, 1.0);
         #ifdef USE_INSTANCING
-          p = instanceMatrix * p;
+          vec4 localPos = instanceMatrix * vec4(position, 1.0);
+          vec3 localNorm = mat3(instanceMatrix) * outlineNormal;
+        #else
+          vec4 localPos = vec4(position, 1.0);
+          vec3 localNorm = outlineNormal;
         #endif
-        vOccWorld = (modelMatrix * p).xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * p;
+
+        vec4 worldPos = modelMatrix * localPos;
+        vec3 worldNorm = normalize((modelMatrix * vec4(localNorm, 0.0)).xyz);
+        worldPos.xyz += worldNorm * uThickness;
+        vOccWorld = worldPos.xyz;
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
       }`,
     fragmentShader: `
       uniform vec3 uColor;

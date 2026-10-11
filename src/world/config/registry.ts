@@ -481,8 +481,8 @@ export const halong: DestinationDef = {
   stages: [
     { 
       id: 'trongMai', index: 1, 
-      name: { vi: 'HÒN TRỐNG MÁI', en: 'TRONG MAI ISLETS' }, 
-      subtitle: { vi: 'Hòn Trống Mái', en: 'Trong Mai Islets (Fighting Cocks)' },
+      name: { vi: 'Hòn Trống Mái', en: 'Trong Mai Islets' }, 
+      subtitle: { vi: 'Cặp gà biểu tượng giữa vịnh ngọc', en: 'Iconic twin islets of Ha Long' },
       checkinXp: 15,
       facts: [
         { text: "Hai đảo nhỏ cao khoảng 12 m đối diện nhau như cặp gà trống – mái", source: "vinwonders.com" }
@@ -491,8 +491,8 @@ export const halong: DestinationDef = {
     },
     { 
       id: 'sungSot', index: 2, 
-      name: { vi: 'HANG SỬNG SỐT', en: 'SURPRISE CAVE' }, 
-      subtitle: { vi: 'Hang Sửng Sốt', en: 'Surprise Cave' },
+      name: { vi: 'Hang Sửng Sốt', en: 'Surprise Cave' }, 
+      subtitle: { vi: 'Kiệt tác nhũ đá đảo Bồ Hòn', en: 'Stalactite wonder on Bo Hon' },
       checkinXp: 15,
       facts: [
         { text: "Nằm trên đảo Bồ Hòn, nhiều nhũ đá, lối bậc đá qua rừng", source: "sunparadiseland.com; mytour.vn" }
@@ -501,8 +501,8 @@ export const halong: DestinationDef = {
     },
     { 
       id: 'tiTop', index: 3, 
-      name: { vi: 'ĐẢO TI TỐP', en: 'TI TOP ISLAND' }, 
-      subtitle: { vi: 'Đảo Ti Tốp', en: 'Ti Top Island' },
+      name: { vi: 'Đảo Ti Tốp', en: 'Ti Top Island' }, 
+      subtitle: { vi: 'Bãi cát vầng trăng & đài ngắm vịnh', en: 'Crescent beach & panoramic bay summit' },
       checkinXp: 15,
       facts: [
         { text: "Có điểm ngắm toàn cảnh vịnh với khoảng 400 bậc thang", source: "vietnamtourism.com" }
@@ -511,8 +511,8 @@ export const halong: DestinationDef = {
     },
     { 
       id: 'cuaVan', index: 4, 
-      name: { vi: 'LÀNG CHÀI CỬA VẠN', en: 'CUA VAN VILLAGE' }, 
-      subtitle: { vi: 'Làng chài Cửa Vạn', en: 'Cua Van Floating Village' },
+      name: { vi: 'Làng Chài Cửa Vạn', en: 'Cua Van Floating Village' }, 
+      subtitle: { vi: 'Xóm bè thanh bình giữa vách đá', en: 'Peaceful floating fishing village' },
       checkinXp: 15,
       facts: [
         { text: "Làng chài nổi lâu đời với nhà nổi và thuyền trắng giữa núi đá vôi", source: "mytour.vn" }
@@ -521,8 +521,8 @@ export const halong: DestinationDef = {
     },
     { 
       id: 'dauGo', index: 5, 
-      name: { vi: 'HANG ĐẦU GỖ', en: 'DAU GO CAVE' }, 
-      subtitle: { vi: 'Hang Đầu Gỗ', en: 'Dau Go Cave' },
+      name: { vi: 'Hang Đầu Gỗ', en: 'Dau Go Cave' }, 
+      subtitle: { vi: 'Hang động đá vôi nghìn năm kỳ vĩ', en: 'Majestic ancient limestone cavern' },
       checkinXp: 15,
       facts: [
         { text: "Được nhắc đến là hang đá vôi lớn nhất vịnh", source: "mia.vn" }
@@ -531,8 +531,8 @@ export const halong: DestinationDef = {
     },
     { 
       id: 'thienCung', index: 6, 
-      name: { vi: 'ĐỘNG THIÊN CUNG', en: 'THIEN CUNG CAVE' }, 
-      subtitle: { vi: 'Động Thiên Cung', en: 'Thien Cung Cave' },
+      name: { vi: 'Động Thiên Cung', en: 'Thien Cung Cave' }, 
+      subtitle: { vi: 'Cung điện thạch nhũ huyền bí', en: 'Mystical stalactite palace' },
       checkinXp: 15,
       facts: [
         { text: "Hệ thống măng đá và thạch nhũ nhiều hình thù", source: "vinwonders.com" }
