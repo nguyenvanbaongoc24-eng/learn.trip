@@ -59,6 +59,23 @@ export class Keyboard {
     this.onMoveKeyCallbacks = [];
   }
 
+  private virtualX: number = 0;
+  private virtualZ: number = 0;
+  private virtualMoving: boolean = false;
+  private virtualRun: boolean = false;
+
+  setVirtualInput(x: number, z: number, isMoving: boolean, run: boolean = false) {
+    this.virtualX = x;
+    this.virtualZ = z;
+    this.virtualMoving = isMoving;
+    this.virtualRun = run;
+    if (isMoving) {
+      for (const cb of this.onMoveKeyCallbacks) {
+        cb();
+      }
+    }
+  }
+
   /**
    * Returns normalized movement vector (x: left/right, z: forward/backward).
    * Positive z = forward (W / Up), Positive x = left (A / Left).
@@ -66,6 +83,15 @@ export class Keyboard {
   getMoveVector(): { x: number; z: number; run: boolean; isMoving: boolean } {
     if (this.disabled || this.isTyping()) {
       return { x: 0, z: 0, run: false, isMoving: false };
+    }
+
+    if (this.virtualMoving) {
+      return {
+        x: this.virtualX,
+        z: this.virtualZ,
+        run: this.virtualRun,
+        isMoving: true,
+      };
     }
 
     let z = 0;

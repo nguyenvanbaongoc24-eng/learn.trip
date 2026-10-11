@@ -762,6 +762,7 @@ function CreateQuestView({
   const [wordOrderString, setWordOrderString] = useState("");
 
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const buildQuestionObject = (): Question => {
     return {
@@ -791,9 +792,21 @@ function CreateQuestView({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!questTitleVi || !promptVi) {
-      alert("Vui lòng nhập đầy đủ tiêu đề quest và nội dung câu hỏi!");
+    setValidationError(null);
+
+    if (!questTitleVi.trim()) {
+      setValidationError("Vui lòng nhập Tiêu đề Quest (tiếng Việt).");
       return;
+    }
+    if (!promptVi.trim() || !promptEn.trim()) {
+      setValidationError("Vui lòng nhập nội dung câu hỏi bằng cả Tiếng Việt và Tiếng Anh để đảm bảo chuẩn song ngữ!");
+      return;
+    }
+    if (qType === "multiple_choice") {
+      if (!opt1Vi.trim() || !opt2Vi.trim()) {
+        setValidationError("Câu hỏi trắc nghiệm cần tối thiểu 2 lựa chọn (A và B).");
+        return;
+      }
     }
 
     const chapId = selectedLoc.chapters?.[0]?.id || `chap-${selectedLoc.id}-01`;
@@ -847,6 +860,13 @@ function CreateQuestView({
       </div>
 
       <form onSubmit={handleSave} className="space-y-5">
+        {validationError && (
+          <div className="p-3 bg-rose-950/80 border border-rose-800 rounded-xl flex items-center gap-2.5 text-xs text-rose-300 animate-fadeIn">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{validationError}</span>
+          </div>
+        )}
+
         {/* Location Selector */}
         <div>
           <label className="block text-xs font-bold text-slate-300 mb-1.5">

@@ -1,9 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { X, Map as MapIcon, BookOpen, Music, Camera, MapPin, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { 
+  X, Map as MapIcon, BookOpen, Music, Camera, MapPin, 
+  ChevronLeft, ChevronRight, Maximize2, Volume2, MessageSquare, 
+  Sparkles, CheckCircle2, AlertCircle, Headphones, Trophy, VolumeX
+} from "lucide-react";
 import { createWorld, GlobeLabelScreenPosition, World, WorldPerf } from "@/world";
 import { getDestination } from "@/world/config/registry";
 import { StageDef } from "@/world/config/destinations";
-
+import { ambientSound } from "@/utils/ambientAudio";
+import { sounds } from "@/utils/soundEffects";
 import { useGame } from "@/context/GameContext";
 
 interface Explore3DModalProps {
@@ -15,7 +20,7 @@ interface Explore3DModalProps {
 }
 
 export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPoiIds, onCheckIn }: Explore3DModalProps) {
-  const { locations } = useGame();
+  const { locations, addXp, addSrsVocab } = useGame();
   const location = locations.find((l) => l.id === initialLocationId);
   const locationIdToLoad = initialLocationId || (locations[0] && locations[0].id) || "loc-hanoi";
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,11 +37,35 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
   const [stageTitleVisible, setStageTitleVisible] = useState(false);
   const [perfStats, setPerfStats] = useState<WorldPerf | null>(null);
   const [showPerf, setShowPerf] = useState(false);
+  const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
+
+  // Dialogue & Quest Modal State
+  const [galleryTab, setGalleryTab] = useState<"photo" | "dialogue">("dialogue");
+  const [selectedDialogueOptId, setSelectedDialogueOptId] = useState<string | null>(null);
+  const [dialogueSubmitted, setDialogueSubmitted] = useState(false);
+  const [dialogueCorrect, setDialogueCorrect] = useState<boolean | null>(null);
+  const [showViPrompt, setShowViPrompt] = useState(false);
+
+  // Mobile Virtual Joystick State
+  const joystickBaseRef = useRef<HTMLDivElement>(null);
+  const [joystickPos, setJoystickPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isJoystickDragging, setIsJoystickDragging] = useState(false);
+
   const globeLabelRefs = useRef(new Map<string, HTMLButtonElement>());
   const checkedInStageIds = useMemo(() => checkedInPoiIds
     .filter((id) => id.startsWith(`${locationIdToLoad}:`))
     .map((id) => id.slice(locationIdToLoad.length + 1)), [checkedInPoiIds, locationIdToLoad]);
   const checkedInStageIdsRef = useRef(checkedInStageIds);
+
+  const speakEnglish = useCallback((text: string, rate: number = 0.9) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      utterance.rate = rate;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
 
   useEffect(() => {
     checkedInStageIdsRef.current = checkedInStageIds;
@@ -133,12 +162,25 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
 
     return () => {
       mounted = false;
+      ambientSound.stop();
       if (worldRef.current) {
         worldRef.current.dispose();
         worldRef.current = null;
       }
     };
   }, [isOpen, locationIdToLoad]);
+
+  // Ambient sound toggle
+  const toggleAmbient = () => {
+    if (!isAmbientPlaying) {
+      ambientSound.start(locationIdToLoad);
+      setIsAmbientPlaying(true);
+    } else {
+      ambientSound.stop();
+      setIsAmbientPlaying(false);
+    }
+    sounds.click();
+  };
 
   const toggleViewMode = () => {
     const newMode = viewMode === "walk" ? "overview" : "walk";
@@ -147,6 +189,9 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
     // Reset walk hint timer when entering walk mode (mục 3.2: tự mờ sau 8s)
     if (newMode === 'walk') {
       setWalkHintVisible(true);
+      if (isAmbientPlaying) {
+        ambientSound.start(locationIdToLoad);
+      }
     }
   };
 
@@ -176,6 +221,7 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
   const confirmCheckIn = () => {
     if (!photoPoiId) return;
     onCheckIn(locationIdToLoad, photoPoiId);
+    sounds.questComplete();
     closePoiPanel();
   };
 
@@ -183,6 +229,87 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
     ? destData?.stages.find((stage) => stage.id === photoPoiId) || null
     : null;
   const isPhotoStageCheckedIn = photoPoiId ? checkedInStageIds.includes(photoPoiId) : false;
+
+  // Reset dialogue state on stage open
+  useEffect(() => {
+    if (photoPoiId) {
+      setSelectedDialogueOptId(null);
+      setDialogueSubmitted(false);
+      setDialogueCorrect(null);
+      setShowViPrompt(false);
+      setGalleryTab(photoStage?.dialogueQuest ? "dialogue" : "photo");
+    }
+  }, [photoPoiId, photoStage?.dialogueQuest]);
+
+  const handleDialogueSubmit = () => {
+    if (!photoStage?.dialogueQuest || !selectedDialogueOptId) return;
+    const quest = photoStage.dialogueQuest;
+    const selectedOpt = quest.options.find((o) => o.id === selectedDialogueOptId);
+    if (!selectedOpt) return;
+
+    setDialogueSubmitted(true);
+    if (selectedOpt.isCorrect) {
+      setDialogueCorrect(true);
+      sounds.questComplete();
+      addXp(quest.rewardXp || 25);
+      // Auto register target vocab into SRS
+      if (quest.targetVocab) {
+        quest.targetVocab.forEach((v) => {
+          addSrsVocab({
+            word: v.word,
+            phonetics: v.phonetics,
+            meaningVi: v.meaningVi,
+            destinationId: locationIdToLoad,
+          });
+        });
+      }
+      // Check in
+      if (photoPoiId && !isPhotoStageCheckedIn) {
+        onCheckIn(locationIdToLoad, photoPoiId);
+      }
+    } else {
+      setDialogueCorrect(false);
+      sounds.wrong();
+    }
+  };
+
+  // Joystick touch handlers
+  const handleJoystickMove = (touch: React.Touch) => {
+    if (!joystickBaseRef.current) return;
+    const rect = joystickBaseRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+    const maxR = rect.width / 2;
+    const dist = Math.hypot(dx, dy);
+    if (dist > maxR) {
+      dx = (dx / dist) * maxR;
+      dy = (dy / dist) * maxR;
+    }
+    setJoystickPos({ x: dx, y: dy });
+    const normX = dx / maxR;
+    const normY = -dy / maxR; // inverted screen Y so up is forward
+    worldRef.current?.setVirtualJoystick?.(normX, normY, true, Math.hypot(normX, normY) > 0.85);
+  };
+
+  const handleJoystickTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setIsJoystickDragging(true);
+    handleJoystickMove(e.touches[0]);
+  };
+
+  const handleJoystickTouchMove = (e: React.TouchEvent) => {
+    if (!isJoystickDragging) return;
+    e.stopPropagation();
+    handleJoystickMove(e.touches[0]);
+  };
+
+  const handleJoystickTouchEnd = () => {
+    setIsJoystickDragging(false);
+    setJoystickPos({ x: 0, y: 0 });
+    worldRef.current?.setVirtualJoystick?.(0, 0, false, false);
+  };
 
   if (!isOpen) return null;
 
@@ -265,8 +392,12 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
                     <BookOpen className="w-5 h-5" strokeWidth={2.5} />
                   </button>
 
-                  <button className="btn-ico-hud" title="Âm thanh">
-                    <Music className="w-5 h-5" strokeWidth={2.5} />
+                  <button 
+                    onClick={toggleAmbient} 
+                    className={`btn-ico-hud ${isAmbientPlaying ? 'bg-amber-400 text-[#1d3538] ring-2 ring-amber-300 shadow-md' : ''}`} 
+                    title={isAmbientPlaying ? "Tắt âm thanh môi trường" : "Bật âm thanh môi trường"}
+                  >
+                    {isAmbientPlaying ? <Volume2 className="w-5 h-5 text-[#1d3538]" strokeWidth={2.5} /> : <Music className="w-5 h-5" strokeWidth={2.5} />}
                   </button>
 
                   <button className="btn-ico-hud" title="Toàn màn hình">
@@ -416,38 +547,66 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
             )}
             
             {viewMode === "walk" && (
-              <div className="w-full flex justify-center" style={{
-                opacity: walkHintVisible ? 1 : 0,
-                transition: 'opacity 1.5s ease-out',
-                pointerEvents: walkHintVisible ? 'auto' : 'none',
-              }}>
-                <div className="bg-[#1d3538]/70 text-[#f8f3ea]/90 px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm shadow-sm text-center max-w-[90vw]">
-                  <span className="hidden sm:inline">
-                    WASD / click để đi · Kéo chuột để xoay · Cuộn để thu phóng · Shift chạy · M bản đồ · E xem ảnh
-                  </span>
-                  <span className="sm:hidden">
-                    Chạm mặt đất để di chuyển · Vuốt màn hình để xoay góc nhìn
-                  </span>
+              <>
+                {/* Mobile Virtual Joystick — Bottom Left */}
+                <div className="absolute left-6 bottom-6 z-20 pointer-events-auto sm:hidden select-none">
+                  <div
+                    ref={joystickBaseRef}
+                    onTouchStart={handleJoystickTouchStart}
+                    onTouchMove={handleJoystickTouchMove}
+                    onTouchEnd={handleJoystickTouchEnd}
+                    onTouchCancel={handleJoystickTouchEnd}
+                    className="w-28 h-28 rounded-full bg-slate-900/50 border-2 border-white/40 backdrop-blur-md relative flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
+                    style={{ touchAction: "none" }}
+                  >
+                    {/* Ring indicator */}
+                    <div className="w-16 h-16 rounded-full border border-white/20 absolute pointer-events-none" />
+                    {/* Center stick */}
+                    <div
+                      className="w-12 h-12 rounded-full bg-linear-to-tr from-amber-400 to-orange-500 border-2 border-white shadow-md flex items-center justify-center text-sm font-black text-slate-900 transition-all pointer-events-none"
+                      style={{
+                        transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`,
+                      }}
+                    >
+                      🕹️
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                {/* Walk Hint */}
+                <div className="w-full flex justify-center pb-2" style={{
+                  opacity: walkHintVisible && !isJoystickDragging ? 1 : 0,
+                  transition: 'opacity 1.5s ease-out',
+                  pointerEvents: walkHintVisible ? 'auto' : 'none',
+                }}>
+                  <div className="bg-[#1d3538]/75 text-[#f8f3ea] px-4 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm shadow-sm text-center max-w-[90vw]">
+                    <span className="hidden sm:inline">
+                      WASD / click để đi · Kéo chuột để xoay · Cuộn thu phóng · Shift chạy · M bản đồ · E tương tác
+                    </span>
+                    <span className="sm:hidden">
+                      Dùng cần gạt ảo bên trái để đi · Vuốt màn hình để xoay góc nhìn
+                    </span>
+                  </div>
+                </div>
+              </>
             )}
           </div>
           
         </div>
       )}
 
-      {/* ========== GALLERY MODAL (Photo Viewer like reference) ========== */}
+      {/* ========== GALLERY & DIALOGUE MODAL ========== */}
       {photoStage && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#1d3538]/70 backdrop-blur-sm p-4">
-          <div className="gallery-card w-full max-w-5xl max-h-[90vh] bg-[#f8f3ea] rounded-3xl border-[3px] border-[#1d3538] shadow-[8px_8px_0_rgba(29,53,56,0.3)] flex flex-col md:flex-row overflow-hidden pointer-events-auto">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#1d3538]/75 backdrop-blur-sm p-4">
+          <div className="gallery-card w-full max-w-5xl max-h-[92vh] bg-[#f8f3ea] rounded-3xl border-[3px] border-[#1d3538] shadow-[8px_8px_0_rgba(29,53,56,0.3)] flex flex-col md:flex-row overflow-hidden pointer-events-auto">
             
             {/* Photo Stage (Left Side) */}
-            <div className="flex-1 relative bg-[#e8e2d6] flex items-center justify-center p-6 md:p-10 min-h-[300px]">
+            <div className="flex-1 relative bg-[#e8e2d6] flex items-center justify-center p-6 md:p-8 min-h-[260px] md:min-h-[380px]">
               {/* Polaroid Frame */}
               <div className="relative max-w-full max-h-full" style={{ transform: 'rotate(-2deg)' }}>
-                <div className="bg-white p-3 pb-14 shadow-xl rounded-sm" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.15), 0 3px 8px rgba(0,0,0,0.1)' }}>
-                  <div className="w-full max-w-[500px] aspect-[4/3] bg-slate-200 overflow-hidden relative">
-                    {photoStage.photos && photoStage.photos.length > 0 ? (
+                <div className="bg-white p-3 pb-12 shadow-xl rounded-sm" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.15), 0 3px 8px rgba(0,0,0,0.1)' }}>
+                  <div className="w-full max-w-[460px] aspect-[4/3] bg-slate-200 overflow-hidden relative">
+                    {photoStage.photos && photoStage.photos.length > 0 && photoStage.photos[0] !== '1' ? (
                       <img 
                         src={`/${photoStage.photos[0]}`} 
                         alt={photoStage.name.vi}
@@ -459,84 +618,269 @@ export function Explore3DModal({ isOpen, initialLocationId, onClose, checkedInPo
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-teal-100 to-teal-200 text-teal-600">
-                        <Camera className="w-16 h-16" strokeWidth={1.5} />
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-linear-to-br from-teal-100 to-amber-100 text-[#1d3538] p-4 text-center">
+                        <div className="text-5xl mb-2">🏛️</div>
+                        <span className="font-black text-sm">{photoStage.name.vi}</span>
+                        <span className="text-xs text-slate-500 font-bold mt-1">{photoStage.subtitle.vi}</span>
                       </div>
                     )}
                   </div>
+                  <div className="mt-3 text-center">
+                    <p className="font-black text-xs text-[#1d3538] tracking-wider uppercase">{photoStage.name.en}</p>
+                  </div>
                 </div>
               </div>
-
-              {/* Navigation Arrows (like reference) */}
-              <button className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 border-2 border-[#1d3538]/20 flex items-center justify-center hover:bg-white transition-colors shadow-md" disabled>
-                <ChevronLeft className="w-5 h-5 text-[#1d3538]/40" />
-              </button>
-              <button className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 border-2 border-[#1d3538]/20 flex items-center justify-center hover:bg-white transition-colors shadow-md" disabled>
-                <ChevronRight className="w-5 h-5 text-[#1d3538]/40" />
-              </button>
             </div>
             
-            {/* Info Sidebar (Right Side - like reference) */}
-            <aside className="w-full md:w-[340px] border-t-[3px] md:border-t-0 md:border-l-[3px] border-[#1d3538] flex flex-col max-h-[50vh] md:max-h-[90vh]">
-              {/* Close Button */}
-              <button 
-                onClick={closePoiPanel} 
-                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-[#f8f3ea] border-2 border-[#1d3538] flex items-center justify-center hover:bg-white transition-colors z-10"
-              >
-                <X className="w-4 h-4" strokeWidth={3} />
-              </button>
-
-              <div className="p-5 flex-1 overflow-y-auto">
-                {/* Chapter Badge */}
-                <div className="text-xs font-black uppercase tracking-widest text-teal-700 mb-1">
-                  Chặng {photoStage.index} / {destData?.stages.length || 6}
+            {/* Info & Dialogue Sidebar (Right Side) */}
+            <aside className="w-full md:w-[440px] border-t-[3px] md:border-t-0 md:border-l-[3px] border-[#1d3538] flex flex-col max-h-[55vh] md:max-h-[92vh] bg-[#f8f3ea]">
+              {/* Top Navigation & Close Button */}
+              <div className="p-3.5 border-b-2 border-[#1d3538]/15 flex items-center justify-between gap-2 shrink-0 bg-[#eee8dc]">
+                <div className="flex items-center gap-1.5">
+                  {photoStage.dialogueQuest && (
+                    <button
+                      type="button"
+                      onClick={() => setGalleryTab("dialogue")}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                        galleryTab === "dialogue"
+                          ? "bg-[#1d3538] text-[#f8f3ea] shadow-xs"
+                          : "bg-white/60 text-[#1d3538] hover:bg-white"
+                      }`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Hội thoại (+25 XP)</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setGalleryTab("photo")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                      galleryTab === "photo"
+                        ? "bg-[#1d3538] text-[#f8f3ea] shadow-xs"
+                        : "bg-white/60 text-[#1d3538] hover:bg-white"
+                    }`}
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Di tích & Ảnh</span>
+                  </button>
                 </div>
-                
-                {/* Title */}
-                <h2 className="text-2xl font-black text-[#1d3538] leading-tight">
-                  {photoStage.name.vi}
-                </h2>
-                {photoStage.subtitle.vi.toLowerCase() !== photoStage.name.vi.toLowerCase() && (
-                  <p className="text-sm font-bold text-slate-500 mt-1">{photoStage.subtitle.vi}</p>
-                )}
-                
-                {/* Facts */}
-                {photoStage.facts && photoStage.facts.length > 0 && (
-                  <div className="mt-5 space-y-2.5">
-                    {photoStage.facts.map((fact, idx) => (
-                      <div key={idx} className="bg-white rounded-xl border border-slate-200 p-3">
-                        <p className="text-sm text-[#1d3538] leading-relaxed">{fact.text}</p>
-                        <p className="text-[10px] text-slate-400 mt-1.5 uppercase tracking-wider font-bold">{fact.source}</p>
+
+                <button 
+                  onClick={closePoiPanel} 
+                  className="w-8 h-8 rounded-full bg-white border-2 border-[#1d3538] flex items-center justify-center hover:bg-rose-50 transition-colors shrink-0 shadow-xs"
+                >
+                  <X className="w-4 h-4 text-[#1d3538]" strokeWidth={3} />
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-5 flex-1 overflow-y-auto space-y-4">
+                {galleryTab === "dialogue" && photoStage.dialogueQuest ? (
+                  /* ── TAB 1: ENGLISH DIALOGUE QUEST ── */
+                  <div className="space-y-4">
+                    {/* NPC Banner */}
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-2xl border-2 border-[#1d3538]/20 shadow-xs">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-2xl border-2 border-amber-300 shrink-0">
+                        {photoStage.dialogueQuest.npcAvatar}
                       </div>
-                    ))}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-black text-[#1d3538] truncate">
+                          {photoStage.dialogueQuest.npcName}
+                        </div>
+                        <div className="text-[11px] font-bold text-amber-700 truncate">
+                          {photoStage.dialogueQuest.npcRole}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => speakEnglish(photoStage.dialogueQuest!.npcPromptEn)}
+                        className="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs transition-transform active:scale-90"
+                        title="Nghe phát âm tiếng Anh"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* NPC Speech Balloon */}
+                    <div className="relative bg-white rounded-2xl p-4 border-2 border-amber-400 shadow-sm space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs sm:text-sm font-extrabold text-slate-800 leading-relaxed">
+                          "{photoStage.dialogueQuest.npcPromptEn}"
+                        </p>
+                      </div>
+
+                      {showViPrompt && (
+                        <p className="text-xs text-slate-500 font-medium pt-2 border-t border-slate-100 animate-fadeIn">
+                          💡 {photoStage.dialogueQuest.npcPromptVi}
+                        </p>
+                      )}
+
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowViPrompt(!showViPrompt)}
+                          className="text-[11px] font-black text-amber-600 hover:text-amber-800 transition-colors"
+                        >
+                          {showViPrompt ? "Ẩn dịch nghĩa" : "Xem dịch tiếng Việt →"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Target Vocabulary Chips */}
+                    {photoStage.dialogueQuest.targetVocab && (
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
+                          Từ vựng trọng tâm (Ghi vào SRS):
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {photoStage.dialogueQuest.targetVocab.map((v, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => speakEnglish(v.word)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-900 hover:bg-amber-100 transition-colors"
+                            >
+                              <Volume2 className="w-3 h-3 text-amber-600 shrink-0" />
+                              <span>{v.word}</span>
+                              <span className="text-[10px] text-amber-700/80 font-normal">({v.meaningVi})</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Interactive Multiple Choice Options */}
+                    <div className="space-y-2 pt-1">
+                      <div className="text-xs font-black text-slate-700">
+                        Chọn câu trả lời phù hợp nhất:
+                      </div>
+                      {photoStage.dialogueQuest.options.map((opt) => {
+                        const isSelected = selectedDialogueOptId === opt.id;
+                        let itemClass = "bg-white border-2 border-slate-200 text-slate-800 hover:border-amber-400";
+                        if (isSelected && !dialogueSubmitted) {
+                          itemClass = "bg-amber-50 border-2 border-amber-500 text-amber-950 font-black shadow-xs";
+                        } else if (dialogueSubmitted) {
+                          if (opt.isCorrect) {
+                            itemClass = "bg-emerald-50 border-2 border-emerald-500 text-emerald-950 font-black";
+                          } else if (isSelected && !opt.isCorrect) {
+                            itemClass = "bg-rose-50 border-2 border-rose-500 text-rose-950";
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            disabled={dialogueSubmitted && dialogueCorrect === true}
+                            onClick={() => {
+                              setSelectedDialogueOptId(opt.id);
+                              speakEnglish(opt.textEn);
+                            }}
+                            className={`w-full text-left p-3 rounded-2xl transition-all cursor-pointer ${itemClass}`}
+                          >
+                            <div className="text-xs font-bold leading-snug">{opt.textEn}</div>
+                            <div className="text-[11px] text-slate-500 mt-0.5">{opt.textVi}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Feedback result */}
+                    {dialogueSubmitted && (
+                      <div className={`p-3.5 rounded-2xl text-xs font-bold border-2 animate-scaleUp ${
+                        dialogueCorrect
+                          ? "bg-emerald-50 border-emerald-400 text-emerald-950"
+                          : "bg-rose-50 border-rose-400 text-rose-950"
+                      }`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          {dialogueCorrect ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              <span className="font-black text-sm">Chính xác! +25 XP 🎉</span>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="w-4 h-4 text-rose-600" />
+                              <span className="font-black text-sm">Chưa đúng, thử lại nhé! 🐢</span>
+                            </>
+                          )}
+                        </div>
+                        <p className="font-medium text-[11px] opacity-90 leading-relaxed">
+                          {photoStage.dialogueQuest.options.find(o => o.id === selectedDialogueOptId)?.feedbackVi}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* ── TAB 2: FACTS & PHOTO ARCHIVE ── */
+                  <div className="space-y-3">
+                    <div className="text-xs font-black uppercase tracking-widest text-teal-700">
+                      Chặng {photoStage.index} / {destData?.stages.length || 6}
+                    </div>
+                    <h2 className="text-2xl font-black text-[#1d3538] leading-tight">
+                      {photoStage.name.vi}
+                    </h2>
+                    {photoStage.subtitle.vi.toLowerCase() !== photoStage.name.vi.toLowerCase() && (
+                      <p className="text-sm font-bold text-slate-500">{photoStage.subtitle.vi}</p>
+                    )}
+                    {photoStage.facts && photoStage.facts.length > 0 && (
+                      <div className="space-y-2 pt-2">
+                        {photoStage.facts.map((fact, idx) => (
+                          <div key={idx} className="bg-white rounded-2xl border border-slate-200 p-3 shadow-xs">
+                            <p className="text-xs text-[#1d3538] leading-relaxed font-medium">{fact.text}</p>
+                            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">{fact.source}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Stamp + Button Footer */}
-              <div className="p-5 border-t border-slate-200 bg-white/50 shrink-0 space-y-3">
-                {isPhotoStageCheckedIn && (
-                  <div className="text-center py-2">
-                    <span className="inline-block text-teal-700 font-black text-sm uppercase tracking-[0.25em] border-2 border-teal-600 px-4 py-1.5 rounded-full" style={{ transform: 'rotate(-3deg)' }}>
-                      ✓ Đã khám phá
-                    </span>
-                  </div>
+              {/* Action Footer */}
+              <div className="p-4 border-t-2 border-[#1d3538]/15 bg-white shrink-0 space-y-2.5">
+                {galleryTab === "dialogue" && photoStage.dialogueQuest ? (
+                  <>
+                    {!dialogueSubmitted || !dialogueCorrect ? (
+                      <button
+                        type="button"
+                        disabled={!selectedDialogueOptId}
+                        onClick={handleDialogueSubmit}
+                        className="w-full py-3 px-4 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-40 text-slate-950 font-black rounded-2xl shadow-md text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>GỬI CÂU TRẢ LỜI & CHECK-IN (+25 XP)</span>
+                      </button>
+                    ) : (
+                      <div className="w-full py-2.5 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-2xl text-center text-xs font-black">
+                        ✓ ĐÃ HOÀN THÀNH ĐỐI THOẠI & CHECK-IN
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {isPhotoStageCheckedIn ? (
+                      <div className="text-center py-1.5 text-teal-700 font-black text-xs uppercase tracking-wider border-2 border-teal-600 rounded-full">
+                        ✓ Đã khám phá địa danh
+                      </div>
+                    ) : (
+                      <button 
+                        type="button" 
+                        onClick={confirmCheckIn} 
+                        className="w-full rounded-2xl bg-[#d8452f] px-4 py-3 text-xs font-black text-white shadow-md hover:brightness-110 transition-all cursor-pointer"
+                      >
+                        Check-in địa điểm (+{photoStage.checkinXp || 15} XP)
+                      </button>
+                    )}
+                  </>
                 )}
-                {!isPhotoStageCheckedIn && (
-                  <button 
-                    type="button" 
-                    onClick={confirmCheckIn} 
-                    className="w-full rounded-xl bg-[#d8452f] px-5 py-3 text-sm font-black text-white shadow-[3px_3px_0_#8a2a1a] active:translate-y-[2px] active:shadow-[1px_1px_0_#8a2a1a] transition-all hover:brightness-110"
-                  >
-                    Check-in địa điểm (+{photoStage.checkinXp || 15} XP)
-                  </button>
-                )}
+
                 <button 
                   type="button" 
                   onClick={closePoiPanel} 
-                  className="w-full rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors text-center"
+                  className="w-full rounded-xl py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors text-center cursor-pointer"
                 >
-                  Quay lại khám phá
+                  Tiếp tục đi bộ khám phá
                 </button>
               </div>
             </aside>

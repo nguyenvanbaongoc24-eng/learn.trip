@@ -202,6 +202,12 @@ class SoundManager {
     osc.start();
     osc.stop(ctx.currentTime + 0.15);
   }
+
+  // Convenience aliases for game audio
+  public click() { this.playClick(); }
+  public correct() { this.playCorrect(); }
+  public wrong() { this.playIncorrect(); }
+  public questComplete() { this.playVictory(); }
 }
 
 export const sounds = new SoundManager();

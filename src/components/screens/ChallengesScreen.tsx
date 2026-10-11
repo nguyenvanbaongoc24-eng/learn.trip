@@ -1,7 +1,5 @@
-"use client";
-
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/context/GameContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -14,9 +12,16 @@ import {
   Lock,
   Gift,
   CheckCircle2,
+  Brain,
+  Volume2,
+  RotateCcw,
+  Sparkles,
+  Check,
+  X as XIcon,
 } from "lucide-react";
 import { motionVariants, springs } from "@/lib/design/tokens";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { sounds } from "@/utils/soundEffects";
 
 // Daily challenge mock data
 const dailyChallenges = [
@@ -63,9 +68,39 @@ const leaderboard = [
 ];
 
 export function ChallengesScreen() {
-  const { progress, locale, t } = useGame();
+  const { progress, locale, t, getDueSrsItems, recordSrsReview, addXp } = useGame();
   const { isAuthenticated } = useAuth();
   const localized = (obj: { vi: string; en: string }) => locale === "vi" ? obj.vi : obj.en;
+
+  // SRS Flashcard State
+  const dueItems = getDueSrsItems();
+  const [srsIndex, setSrsIndex] = useState(0);
+  const [srsFlipped, setSrsFlipped] = useState(false);
+
+  const currentSrsItem = dueItems.length > 0 ? dueItems[srsIndex % dueItems.length] : null;
+
+  const speakEnglish = (text: string) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleSrsAction = (success: boolean) => {
+    if (!currentSrsItem) return;
+    recordSrsReview(currentSrsItem.id, success);
+    if (success) {
+      sounds.correct();
+      addXp(10);
+    } else {
+      sounds.wrong();
+    }
+    setSrsFlipped(false);
+    setSrsIndex((prev) => prev + 1);
+  };
 
   // Update leaderboard with real XP
   const board = leaderboard.map((entry) =>
@@ -93,6 +128,106 @@ export function ChallengesScreen() {
             : "Complete quests for bonus XP! 🎁"}
         </p>
       </motion.div>
+
+      {/* SRS Spaced Repetition Vocabulary Review Section */}
+      <motion.section variants={motionVariants.staggerChild} className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="w-5 h-5 text-purple-600" />
+            <h2 className="text-sm font-black text-slate-800">
+              {locale === "vi" ? "Ôn tập Trí nhớ Ngắt quãng (SRS)" : "Spaced Repetition Review (SRS)"}
+            </h2>
+          </div>
+          <span className="px-2.5 py-0.5 bg-purple-100 text-purple-800 text-[11px] font-black rounded-full">
+            {dueItems.length} {locale === "vi" ? "từ cần ôn" : "due words"}
+          </span>
+        </div>
+
+        {currentSrsItem ? (
+          <div className="bg-linear-to-br from-purple-50 via-indigo-50/50 to-white border-2 border-purple-200/80 rounded-3xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between text-xs text-purple-700 font-bold">
+              <span>Thẻ {((srsIndex % dueItems.length) + 1)} / {dueItems.length}</span>
+              <span className="text-[10px] bg-purple-200/60 px-2 py-0.5 rounded-md uppercase font-black tracking-wider">
+                Khoảng cách: {currentSrsItem.intervalDays} ngày
+              </span>
+            </div>
+
+            {/* Flashcard body */}
+            <div className="bg-white rounded-2xl border-2 border-purple-100 p-5 text-center space-y-3 shadow-xs">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-2xl font-black text-slate-900 tracking-wide">
+                  {currentSrsItem.word}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => speakEnglish(currentSrsItem.word)}
+                  className="p-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl transition-colors cursor-pointer"
+                  title="Nghe phát âm"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              {currentSrsItem.phonetics && (
+                <p className="text-xs font-mono text-purple-600 font-medium">{currentSrsItem.phonetics}</p>
+              )}
+
+              {currentSrsItem.exampleEn && (
+                <p className="text-xs text-slate-500 italic max-w-md mx-auto">
+                  "{currentSrsItem.exampleEn}"
+                </p>
+              )}
+
+              {/* Flipped Answer */}
+              {srsFlipped ? (
+                <div className="pt-3 border-t border-purple-100 animate-fadeIn space-y-1">
+                  <div className="text-base font-black text-emerald-700">
+                    {currentSrsItem.meaningVi}
+                  </div>
+                  <p className="text-[11px] text-slate-400">Đã lặp lại: {currentSrsItem.repetitions} lần</p>
+                </div>
+              ) : (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSrsFlipped(true)}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                  >
+                    Lật thẻ xem nghĩa tiếng Việt 👀
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* SRS Feedback Actions */}
+            {srsFlipped && (
+              <div className="flex items-center gap-3 pt-1 animate-fadeIn">
+                <button
+                  type="button"
+                  onClick={() => handleSrsAction(false)}
+                  className="flex-1 py-3 px-3 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-rose-300"
+                >
+                  <XIcon className="w-4 h-4" />
+                  <span>Chưa nhớ (Ôn lại ngày mai)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSrsAction(true)}
+                  className="flex-1 py-3 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/20"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Đã nhớ (+10 XP)</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs text-emerald-800 font-bold">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>Xuất sắc! Bạn đã hoàn thành tất cả từ vựng cần ôn hôm nay. Hãy quay lại vào ngày mai nhé! 🌟</span>
+          </div>
+        )}
+      </motion.section>
 
       {/* Daily Challenges */}
       <motion.section variants={motionVariants.staggerChild} className="space-y-3">

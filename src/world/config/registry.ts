@@ -65,6 +65,45 @@ export const hanoi: DestinationDef = {
         { text: "Cầu Thê Húc xây 1865 bởi Nguyễn Văn Siêu, nối bờ hồ với đền Ngọc Sơn", source: "mia.vn" },
         { text: "Tháp Bút 5 tầng bằng đá ở lối vào cầu Thê Húc", source: "theleader.vn" }
       ],
+      dialogueQuest: {
+        npcName: "Bác Nam",
+        npcRole: "Bác Lái Xích Lô Hồ Gươm",
+        npcAvatar: "🚲",
+        npcPromptEn: "Hello young explorer! Welcome to Hoan Kiem Lake. Do you know why this sacred lake is called 'Lake of the Returned Sword'?",
+        npcPromptVi: "Chào cháu! Chào mừng cháu đến với Hồ Gươm. Cháu có biết vì sao hồ nước thiêng này lại được gọi là 'Hồ Hoàn Kiếm' không?",
+        targetVocab: [
+          { word: "legend", phonetics: "/ˈledʒ.ənd/", meaningVi: "truyền thuyết" },
+          { word: "sacred turtle", phonetics: "/ˈseɪ.krɪd ˈtɜː.təl/", meaningVi: "rùa thần" },
+          { word: "magic sword", phonetics: "/ˈmædʒ.ɪk sɔːd/", meaningVi: "thanh gươm thần" }
+        ],
+        rewardXp: 25,
+        options: [
+          {
+            id: "opt1",
+            textEn: "King Le Loi returned the magic sword to the Golden Turtle here.",
+            textVi: "Vua Lê Lợi đã hoàn trả thanh gươm thần cho Rùa Vàng Kim Quy tại đây.",
+            isCorrect: true,
+            feedbackEn: "Brilliant! The Golden Turtle took back the heavenly sword after peace was restored.",
+            feedbackVi: "Tuyệt vời! Rùa Vàng Kim Quy đã ngậm gươm thần lặn xuống nước sau khi giặc tan."
+          },
+          {
+            id: "opt2",
+            textEn: "A fisherman found hundreds of swords in the middle of the lake.",
+            textVi: "Một người đánh cá đã vớt được hàng trăm thanh gươm ở giữa hồ.",
+            isCorrect: false,
+            feedbackEn: "Not quite! Remember the story of King Le Loi and the giant golden turtle.",
+            feedbackVi: "Chưa đúng rồi! Hãy nhớ đến câu chuyện Vua Lê Lợi và Thần Kim Quy nhé."
+          },
+          {
+            id: "opt3",
+            textEn: "People forged traditional swords around the ancient lakeside.",
+            textVi: "Người dân rèn những thanh kiếm truyền thống quanh bờ hồ.",
+            isCorrect: false,
+            feedbackEn: "Incorrect. The lake is named after returning the national treasure sword.",
+            feedbackVi: "Chưa chính xác. Tên gọi này gắn liền với việc 'hoàn trả' gươm báu."
+          }
+        ]
+      },
       dir: [0, 0], spawnOffset: { bearing: 0, dist: 6.8 }, interactAt: { bearing: 0, dist: 4.8 }, flatR: 9, ground: 'lawn', build: (ctx: any) => buildHoanKiem(ctx), photos: ['content/photos/hanoi/hoankiem.jpg'] 
     },
     { 
@@ -76,6 +115,45 @@ export const hanoi: DestinationDef = {
         { text: "Nhà ống: mặt tiền hẹp, chiều sâu dài, mái ngói nghiêng, tầng trệt là cửa hàng", source: "nhandan.vn" },
         { text: "Phố mang tên nghề: Hàng Bạc (kim hoàn), Hàng Đào (vải đỏ-hồng), Hàng Mã (dài khoảng 339 m)", source: "greensm.com; mia.vn" }
       ],
+      dialogueQuest: {
+        npcName: "Bác Tuấn",
+        npcRole: "Nghệ Nhân Phố Hàng Bạc",
+        npcAvatar: "💍",
+        npcPromptEn: "Greetings! Hanoi's Old Quarter has 36 traditional guild streets named after their craft. How would you ask for silver jewelry here in English?",
+        npcPromptVi: "Chào bạn nhỏ! Phố cổ Hà Nội có 36 phố phường đặt theo tên nghề truyền thống. Bạn sẽ hỏi mua trang sức bạc bằng tiếng Anh thế nào?",
+        targetVocab: [
+          { word: "craft guild", phonetics: "/krɑːft ɡɪld/", meaningVi: "phường nghề thủ công" },
+          { word: "silver smith", phonetics: "/ˈsɪl.və.smɪθ/", meaningVi: "thợ kim hoàn/bạc" },
+          { word: "heritage", phonetics: "/ˈher.ɪ.tɪdʒ/", meaningVi: "di sản" }
+        ],
+        rewardXp: 25,
+        options: [
+          {
+            id: "opt1",
+            textEn: "Could you show me your handcrafted silver souvenirs, please?",
+            textVi: "Bác có thể cho cháu xem quà lưu niệm bạc thủ công được không?",
+            isCorrect: true,
+            feedbackEn: "Polite and accurate! Hang Bac is world-renowned for exquisite handcrafted silver.",
+            feedbackVi: "Rất lịch sự và chính xác! Phố Hàng Bạc nổi tiếng khắp nơi về bạc tinh xảo."
+          },
+          {
+            id: "opt2",
+            textEn: "Give me cheap silver right now, street man.",
+            textVi: "Đưa tôi bạc rẻ ngay bây giờ, người đàn ông trên phố.",
+            isCorrect: false,
+            feedbackEn: "Too abrupt and impolite in English conversational etiquette.",
+            feedbackVi: "Cách nói này quá cộc lốc và thiếu lịch sự trong tiếng Anh."
+          },
+          {
+            id: "opt3",
+            textEn: "Where is the silver mine in the middle of this street?",
+            textVi: "Mỏ bạc nằm ở đâu giữa con phố này thế?",
+            isCorrect: false,
+            feedbackEn: "There are no mines in the city; these are artisanal artisan workshops!",
+            feedbackVi: "Trong thành phố không có mỏ khai khoáng mà là các xưởng thợ kim hoàn."
+          }
+        ]
+      },
       dir: [22, 10], spawnOffset: { bearing: 0, dist: 6.5 }, flatR: 8, ground: 'paved', build: (ctx: any) => buildPhoCo(ctx), photos: ['content/photos/hanoi/36phophuong.jpg'] 
     },
     { 
@@ -88,6 +166,45 @@ export const hanoi: DestinationDef = {
         { text: "Khuê Văn Các xây 1805, nền vuông cạnh khoảng 6,8 m", source: "vinpearl.com" },
         { text: "Khu nội tự gồm 5 lớp không gian ngăn bằng tường gạch, mỗi tường có 3 cửa", source: "vinwonders.com" }
       ],
+      dialogueQuest: {
+        npcName: "Chị Mai",
+        npcRole: "Hướng Dẫn Viên Văn Miếu",
+        npcAvatar: "📚",
+        npcPromptEn: "Welcome to Vietnam's first imperial university, built in 1070! What do the 82 stone stelae upon turtle backs represent?",
+        npcPromptVi: "Chào mừng bạn đến với trường đại học đầu tiên của Việt Nam năm 1070! 82 bia đá đặt trên lưng rùa tượng trưng cho điều gì?",
+        targetVocab: [
+          { word: "doctor laureate", phonetics: "/ˈdɒk.tər ˈlɔː.ri.ət/", meaningVi: "tiến sĩ đỗ đạt" },
+          { word: "wisdom", phonetics: "/ˈwɪz.dəm/", meaningVi: "trí tuệ, học vấn" },
+          { word: "perseverance", phonetics: "/ˌpɜː.sɪˈvɪə.rəns/", meaningVi: "sự kiên trì, bền bỉ" }
+        ],
+        rewardXp: 25,
+        options: [
+          {
+            id: "opt1",
+            textEn: "They honor the brilliant scholars and doctors of imperial examinations.",
+            textVi: "Vinh danh những bậc hiền tài và tiến sĩ đỗ đạt qua các kỳ khoa cử.",
+            isCorrect: true,
+            feedbackEn: "Exactly! As Thân Nhân Trung wrote: 'Talents are the vital energy of the nation.'",
+            feedbackVi: "Chính xác! Đúng như lời cụ Thân Nhân Trung: 'Hiền tài là nguyên khí của quốc gia'."
+          },
+          {
+            id: "opt2",
+            textEn: "They are gravestones of ancient emperors.",
+            textVi: "Đó là những bia mộ của các vị hoàng đế thời xưa.",
+            isCorrect: false,
+            feedbackEn: "Incorrect. The Temple of Literature is an educational shrine, not a tomb.",
+            feedbackVi: "Chưa đúng. Văn Miếu là biểu tượng giáo dục, không phải lăng mộ."
+          },
+          {
+            id: "opt3",
+            textEn: "They indicate the map coordinates of old Hanoi.",
+            textVi: "Đó là bản đồ chỉ tọa độ của Hà Nội cổ.",
+            isCorrect: false,
+            feedbackEn: "Not quite. They record names and birthplaces of doctoral graduates.",
+            feedbackVi: "Chưa đúng. Bia đá khắc tên tuổi và quê quán của các vị tiến sĩ."
+          }
+        ]
+      },
       dir: [0, -75], spawnOffset: { bearing: 0, dist: 7.2 }, flatR: 8.5, ground: 'paved', build: (ctx: any) => buildVanMieu(ctx), photos: ['content/photos/hanoi/vanmieu.jpg'] 
     },
     { 
@@ -99,6 +216,45 @@ export const hanoi: DestinationDef = {
         { text: "Cà phê trứng do cụ Nguyễn Văn Giảng sáng tạo năm 1946, dùng lòng đỏ trứng đánh bông thay sữa", source: "vietcetera.com" },
         { text: "Cà phê được rót vào tách nhỏ màu vàng nhạt, đặt trong bát nước ấm", source: "mytour.vn" }
       ],
+      dialogueQuest: {
+        npcName: "Cô Lan",
+        npcRole: "Chủ Quán Phở Gia Truyền",
+        npcAvatar: "🍜",
+        npcPromptEn: "A warm welcome to you! How would you order a bowl of traditional beef noodle soup with fresh herbs in English?",
+        npcPromptVi: "Chào quý khách! Cháu muốn gọi một bát phở bò truyền thống kèm rau thơm bằng tiếng Anh thì nói thế nào?",
+        targetVocab: [
+          { word: "aromatic broth", phonetics: "/ˌær.əˈmæt.ɪk brɒθ/", meaningVi: "nước dùng thơm ngọt" },
+          { word: "whipped egg yolk", phonetics: "/wɪpt eɡ jəʊk/", meaningVi: "lòng đỏ trứng đánh bông" },
+          { word: "fresh herbs", phonetics: "/freʃ hɜːbz/", meaningVi: "rau thơm tươi" }
+        ],
+        rewardXp: 25,
+        options: [
+          {
+            id: "opt1",
+            textEn: "May I have a bowl of hot beef Pho with fresh herbs and lime, please?",
+            textVi: "Cho cháu xin một bát phở bò nóng kèm rau thơm và chanh với ạ!",
+            isCorrect: true,
+            feedbackEn: "Delicious English! Enjoy your aromatic Pho and rich egg coffee.",
+            feedbackVi: "Rất chuẩn xác! Chúc bạn thưởng thức bát phở nóng hổi đậm đà."
+          },
+          {
+            id: "opt2",
+            textEn: "Bring boiling soup water with raw meat here immediately.",
+            textVi: "Mang nước canh sôi với thịt sống lại đây ngay.",
+            isCorrect: false,
+            feedbackEn: "That's not how diners politely order authentic Pho!",
+            feedbackVi: "Đây không phải cách gọi món lịch sự của thực khách sành ăn."
+          },
+          {
+            id: "opt3",
+            textEn: "I want an ice cream dessert with noodle cake.",
+            textVi: "Tôi muốn một món kem tráng miệng với bánh mì sợi.",
+            isCorrect: false,
+            feedbackEn: "Pho is a savory noodle dish cooked with spices like star anise and cinnamon.",
+            feedbackVi: "Phở là món nước dùng nấu từ thảo mộc, quế hồi, không phải món kem."
+          }
+        ]
+      },
       dir: [25, 55], spawnOffset: { bearing: 0, dist: 6.0 }, flatR: 7.5, ground: 'paved', build: (ctx: any) => buildAmThuc(ctx), photos: ['content/photos/hanoi/amthuc.jpg'] 
     },
     { 
@@ -110,6 +266,45 @@ export const hanoi: DestinationDef = {
         { text: "Daydé & Pillé thiết kế, xây 1899–1902, 19 nhịp dầm thép trên 20 trụ", source: "tapchicongthuong.vn; en.wikipedia.org" },
         { text: "Đường sắt đơn ở giữa, hai bên là đường bộ và lối đi bộ", source: "tapchicongthuong.vn" }
       ],
+      dialogueQuest: {
+        npcName: "Bác Hùng",
+        npcRole: "Nhiếp Ảnh Gia Cầu Long Biên",
+        npcAvatar: "📷",
+        npcPromptEn: "Look at the cantilever steel spans over the Red River! Which sentence best describes Long Bien Bridge's historical significance?",
+        npcPromptVi: "Hãy ngắm những nhịp dầm thép vươn qua Sông Hồng! Câu nào mô tả đúng nhất ý nghĩa lịch sử của Cầu Long Biên?",
+        targetVocab: [
+          { word: "steel cantilever", phonetics: "/stiːl ˈkæn.tɪˌliː.vər/", meaningVi: "dầm thép công-xôn" },
+          { word: "historical witness", phonetics: "/hɪˈstɒr.ɪ.kəl ˈwɪt.nəs/", meaningVi: "nhân chứng lịch sử" },
+          { word: "resilience", phonetics: "/rɪˈzɪl.jəns/", meaningVi: "sự kiên cường, bền bỉ" }
+        ],
+        rewardXp: 25,
+        options: [
+          {
+            id: "opt1",
+            textEn: "It is an enduring historical witness that survived two centuries of warfare and peace.",
+            textVi: "Cây cầu là nhân chứng lịch sử kiên cường vượt qua hai thế kỷ thăng trầm và đạn bom.",
+            isCorrect: true,
+            feedbackEn: "Perfect! Built over a century ago, it remains an eternal icon of Hanoi.",
+            feedbackVi: "Chính xác! Cây cầu thép hơn 100 năm tuổi là biểu tượng bất tử của Thủ đô."
+          },
+          {
+            id: "opt2",
+            textEn: "It is a newly built plastic suspension bridge opened last month.",
+            textVi: "Đó là cây cầu treo bằng nhựa mới xây tháng trước.",
+            isCorrect: false,
+            feedbackEn: "Wrong. Long Bien is built of heavy French steel in the early 1900s.",
+            feedbackVi: "Sai rồi. Cầu được xây dựng bằng thép kiên cố từ đầu thế kỷ 20."
+          },
+          {
+            id: "opt3",
+            textEn: "It is used exclusively for submarine passage beneath the river.",
+            textVi: "Cầu chỉ dành cho tàu ngầm đi qua dưới lòng sông.",
+            isCorrect: false,
+            feedbackEn: "Long Bien carries trains, motorbikes, and walking pedestrians above the river.",
+            feedbackVi: "Cầu Long Biên bắc qua mặt sông dành cho tàu hỏa, xe máy và người đi bộ."
+          }
+        ]
+      },
       dir: [0, 75], spawnOffset: { bearing: Math.PI / 2, dist: 11.5 }, flatR: 12, ground: 'sand', build: (ctx: any) => buildLongBien(ctx), photos: ['content/photos/hanoi/longbien.jpg'] 
     },
     { 
@@ -121,6 +316,45 @@ export const hanoi: DestinationDef = {
         { text: "Chùa Một Cột xây 1049, một cột đá cao khoảng 4 m, đường kính khoảng 1,2 m", source: "vinwonders.com" },
         { text: "Lăng cao 21,6 m, mỗi cạnh 30 m, ốp đá granite xám, hoàn thành 1975", source: "greensm.com" }
       ],
+      dialogueQuest: {
+        npcName: "Thầy Thích Tuệ",
+        npcRole: "Sư Thầy Chùa Một Cột",
+        npcAvatar: "🪷",
+        npcPromptEn: "Peace to you! One Pillar Pagoda was erected in 1049 to resemble a sacred lotus flower rising from a pond. How do you say 'hoa sen' in English?",
+        npcPromptVi: "A di đà Phật! Chùa Một Cột được xây dựng từ năm 1049 tựa như đóa sen thiêng vươn lên từ mặt nước. 'Hoa sen' trong tiếng Anh là gì?",
+        targetVocab: [
+          { word: "lotus blossom", phonetics: "/ˈləʊ.təs ˈblɒs.əm/", meaningVi: "đóa hoa sen nở" },
+          { word: "architectural wonder", phonetics: "/ˌɑː.kɪˈtek.tʃər.əl ˈwʌn.dər/", meaningVi: "kỳ quan kiến trúc" },
+          { word: "serenity", phonetics: "/səˈren.ə.ti/", meaningVi: "sự thanh tịnh" }
+        ],
+        rewardXp: 25,
+        options: [
+          {
+            id: "opt1",
+            textEn: "The Lotus blossom - Vietnam's national flower of purity and elegance.",
+            textVi: "Hoa Sen (Lotus) - quốc hoa của Việt Nam tượng trưng cho sự thanh khiết.",
+            isCorrect: true,
+            feedbackEn: "Wonderful! The lotus rising from the pond is a timeless symbol of purity.",
+            feedbackVi: "Rất hay! Đóa sen nở giữa hồ nước là biểu tượng ngàn năm của tâm hồn Việt."
+          },
+          {
+            id: "opt2",
+            textEn: "The Sunflower - a yellow plant following the morning sun.",
+            textVi: "Hoa Hướng Dương (Sunflower) hướng về mặt trời buổi sớm.",
+            isCorrect: false,
+            feedbackEn: "No, One Pillar Pagoda is designed like a pure lotus, not sunflower.",
+            feedbackVi: "Chưa đúng. Chùa Một Cột có kiến trúc như đóa hoa sen."
+          },
+          {
+            id: "opt3",
+            textEn: "The Cactus - a spiky desert plant.",
+            textVi: "Cây Xương Rồng (Cactus) ở sa mạc.",
+            isCorrect: false,
+            feedbackEn: "Incorrect. The temple sits on a single pillar in an elegant lotus pond.",
+            feedbackVi: "Không chính xác. Ngôi chùa tọa lạc trên một cột đá giữa hồ sen tĩnh lặng."
+          }
+        ]
+      },
       dir: [-22, -15], spawnOffset: { bearing: 0, dist: 5.6 }, interactAt: { bearing: 0, dist: 3.6 }, flatR: 9.5, ground: 'paved', build: (ctx: any) => buildMotCot(ctx), photos: ['content/photos/hanoi/motcot.jpg'] 
     }
   ]

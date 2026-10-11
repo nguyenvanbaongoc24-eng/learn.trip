@@ -11,6 +11,7 @@ import {
   ContentStatus,
   ContentVersion,
   Question,
+  SRSReviewItem,
 } from "@/types/content";
 import { mockLocations, initialPassportStamps } from "@/data/mockContent";
 
@@ -50,6 +51,17 @@ interface GameContextType {
   resetProgress: () => void;
   getNextLocation: () => Location | undefined;
   getNextQuest: (location: Location) => Quest | undefined;
+
+  // Spaced Repetition System (SRS)
+  addSrsVocab: (item: {
+    word: string;
+    phonetics?: string;
+    meaningVi: string;
+    exampleEn?: string;
+    destinationId?: string;
+  }) => void;
+  recordSrsReview: (id: string, success: boolean) => void;
+  getDueSrsItems: () => SRSReviewItem[];
 
   // CMS & Content Engine Actions
   versions: ContentVersion[];
@@ -108,6 +120,36 @@ const defaultProgress: UserProgress = {
   collectedStamps: [],
   collectedBadges: [],
   checkedInPoiIds: [],
+  srsItems: [
+    {
+      id: "srs-legend",
+      word: "legend",
+      phonetics: "/ˈledʒ.ənd/",
+      meaningVi: "truyền thuyết",
+      exampleEn: "The legend of Hoan Kiem Lake tells the story of the Golden Turtle.",
+      destinationId: "loc-hanoi",
+      lastReviewedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      nextReviewAt: new Date(Date.now() - 1000).toISOString(),
+      intervalDays: 1,
+      repetitions: 1,
+      mistakeCount: 0,
+      mastered: false,
+    },
+    {
+      id: "srs-heritage",
+      word: "heritage",
+      phonetics: "/ˈher.ɪ.tɪdʒ/",
+      meaningVi: "di sản",
+      exampleEn: "Hanoi's 36 guild streets are an invaluable cultural heritage.",
+      destinationId: "loc-hanoi",
+      lastReviewedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+      nextReviewAt: new Date(Date.now() - 2000).toISOString(),
+      intervalDays: 2,
+      repetitions: 2,
+      mistakeCount: 0,
+      mastered: false,
+    },
+  ],
 };
 
 const initialVersions: ContentVersion[] = [
@@ -522,6 +564,89 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return undefined;
   };
 
+  const addSrsVocab = useCallback(
+    (item: {
+      word: string;
+      phonetics?: string;
+      meaningVi: string;
+      exampleEn?: string;
+      destinationId?: string;
+    }) => {
+      setProgress((prev) => {
+        const existing = prev.srsItems || [];
+        const found = existing.find(
+          (s) => s.word.toLowerCase() === item.word.toLowerCase()
+        );
+        if (found) return prev;
+        const newItem: SRSReviewItem = {
+          id: `srs-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          word: item.word,
+          phonetics: item.phonetics,
+          meaningVi: item.meaningVi,
+          exampleEn: item.exampleEn,
+          destinationId: item.destinationId,
+          lastReviewedAt: new Date().toISOString(),
+          nextReviewAt: new Date(Date.now() + 86400000).toISOString(),
+          intervalDays: 1,
+          repetitions: 1,
+          mistakeCount: 0,
+          mastered: false,
+        };
+        return {
+          ...prev,
+          srsItems: [...existing, newItem],
+        };
+      });
+    },
+    []
+  );
+
+  const recordSrsReview = useCallback((id: string, success: boolean) => {
+    setProgress((prev) => {
+      const items = prev.srsItems || [];
+      const updated = items.map((item) => {
+        if (item.id !== id) return item;
+        if (success) {
+          const nextReps = item.repetitions + 1;
+          const nextInterval =
+            nextReps === 2 ? 3 : nextReps === 3 ? 7 : nextReps === 4 ? 14 : 30;
+          return {
+            ...item,
+            repetitions: nextReps,
+            intervalDays: nextInterval,
+            lastReviewedAt: new Date().toISOString(),
+            nextReviewAt: new Date(
+              Date.now() + nextInterval * 86400000
+            ).toISOString(),
+            mastered: nextReps >= 4,
+          };
+        } else {
+          return {
+            ...item,
+            repetitions: 1,
+            intervalDays: 1,
+            mistakeCount: item.mistakeCount + 1,
+            lastReviewedAt: new Date().toISOString(),
+            nextReviewAt: new Date(Date.now() + 86400000).toISOString(),
+            mastered: false,
+          };
+        }
+      });
+      return {
+        ...prev,
+        srsItems: updated,
+      };
+    });
+  }, []);
+
+  const getDueSrsItems = useCallback((): SRSReviewItem[] => {
+    const items = progress.srsItems || [];
+    const now = Date.now();
+    return items.filter(
+      (item) => new Date(item.nextReviewAt).getTime() <= now && !item.mastered
+    );
+  }, [progress.srsItems]);
+
   const resetProgress = async () => {
     const fresh: UserProgress = {
       xp: 0,
@@ -858,6 +983,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         resetProgress,
         getNextLocation,
         getNextQuest,
+        addSrsVocab,
+        recordSrsReview,
+        getDueSrsItems,
 
         // CMS
         versions,

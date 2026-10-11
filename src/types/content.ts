@@ -265,6 +265,21 @@ export interface ContentPack {
   locations: Location[];
 }
 
+export interface SRSReviewItem {
+  id: string;
+  word: string;
+  phonetics?: string;
+  meaningVi: string;
+  exampleEn?: string;
+  destinationId?: string;
+  lastReviewedAt: string;
+  nextReviewAt: string;
+  intervalDays: number;
+  repetitions: number;
+  mistakeCount: number;
+  mastered: boolean;
+}
+
 export interface UserProgress {
   xp: number;
   streak: number;
@@ -281,4 +296,5 @@ export interface UserProgress {
     unlockedAt: string;
   }>;
   checkedInPoiIds: string[];
+  srsItems?: SRSReviewItem[];
 }

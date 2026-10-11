@@ -5,6 +5,26 @@ export interface FactDef {
   source: string;
 }
 
+export interface DialogueOption {
+  id: string;
+  textEn: string;
+  textVi: string;
+  isCorrect: boolean;
+  feedbackEn: string;
+  feedbackVi: string;
+}
+
+export interface DialogueQuestDef {
+  npcName: string;
+  npcRole: string;
+  npcAvatar: string;
+  npcPromptEn: string;
+  npcPromptVi: string;
+  targetVocab: { word: string; phonetics?: string; meaningVi: string }[];
+  options: DialogueOption[];
+  rewardXp: number;
+}
+
 export interface StageDef {
   id: string;
   index: number;
@@ -19,6 +39,7 @@ export interface StageDef {
   photos: string[];
   facts?: FactDef[];
   checkinXp?: number;
+  dialogueQuest?: DialogueQuestDef;
 }
 
 export interface WaterDef {

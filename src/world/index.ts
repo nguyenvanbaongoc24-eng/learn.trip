@@ -62,6 +62,7 @@ export interface World {
   setMode(m: 'walk' | 'overview'): void;
   setCheckedIn(ids: string[]): void;
   setPaused(p: boolean): void;
+  setVirtualJoystick?(x: number, z: number, isMoving: boolean, run?: boolean): void;
   dispose(): void;
 }
 
@@ -747,6 +748,9 @@ export async function createWorld(opts: WorldOptions): Promise<World> {
     },
     setCheckedIn(ids: string[]) {
       poiManager.setCheckedIn(ids);
+    },
+    setVirtualJoystick(x: number, z: number, isMoving: boolean, run: boolean = false) {
+      keyboard.setVirtualInput(x, z, isMoving, run);
     },
     dispose() {
       isDisposed = true;
